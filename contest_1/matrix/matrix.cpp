@@ -45,7 +45,7 @@ Matrix<T, x, y> operator-(const Matrix<T, x, y>& lhs, const Matrix<T, x, y>& rhs
 }
 
 template<typename T, size_t x, size_t y, size_t z>
-Matrix<T, x, y> operator*(const Matrix<T, x, y>& lhs, const Matrix<T, y, z>& rhs) {
+Matrix<T, x, z> operator*(const Matrix<T, x, y>& lhs, const Matrix<T, y, z>& rhs) {
     Matrix<T, x, z> result{};
 
     for (size_t i = 0; i < x; ++i) {

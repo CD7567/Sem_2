@@ -39,7 +39,7 @@ public:
     friend Matrix<T, x, y> operator+(const Matrix<T, x, y>&, const Matrix<T, x, y>&);
     friend Matrix<T, x, y> operator-(const Matrix<T, x, y>&, const Matrix<T, x, y>&);
     template<size_t z>
-    friend Matrix<T, x, y> operator*(const Matrix<T, x, y>&, const Matrix<T, y, z>&);
+    friend Matrix<T, x, z> operator*(const Matrix<T, x, y>&, const Matrix<T, y, z>&);
     friend Matrix<T, x, y>& operator+=(Matrix<T, x, y>&, const Matrix<T, x, y>&);
     friend Matrix<T, x, y>& operator-=(Matrix<T, x, y>&, const Matrix<T, x, y>&);
     friend Matrix<T, x, y>& operator*=(Matrix<T, x, y>&, const Matrix<T, y, y>&);
