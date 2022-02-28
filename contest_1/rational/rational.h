@@ -25,11 +25,11 @@ class Rational {
   }
   Rational(const Rational& src) = default;
 
-  int64_t GetNumerator() const {
-    return numerator_;
+  int32_t GetNumerator() const {
+    return static_cast<int32_t>(numerator_);
   }
-  int64_t GetDenominator() const {
-    return denominator_;
+  int32_t GetDenominator() const {
+    return static_cast<int32_t>(denominator_);
   }
 
   void SetNumerator(const int64_t num) {

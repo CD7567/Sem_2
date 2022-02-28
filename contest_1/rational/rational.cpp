@@ -124,7 +124,7 @@ bool operator>=(const Rational& lhs, const Rational& rhs) {
 }
 
 std::istream& operator>>(std::istream& in, Rational& num) {
-  char input[22], numerator[11], denominator[11]{'1', '\0'};
+  char input[30], numerator[15], denominator[15]{'1', '\0'};
   in >> input;
 
   size_t slash_pos_idx = 0, input_len = strlen(input);
