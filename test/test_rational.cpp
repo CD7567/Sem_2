@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
+#include <string>
 #include "rational.h"
 #include "rational.h"  // check include guards
 
@@ -136,19 +137,47 @@ TEST_CASE("Compare") {
 
 TEST_CASE("Streams") {
     Rational a;
-    Rational b;
-    Rational c, d, e, f;
+    std::string max_int = std::to_string(INT32_MAX);
+    std::string max_neg_int = std::to_string(-INT32_MAX);
 
-    std::stringstream is("-7/3 4/6 7 3/-7 1/0 -48/24 -0/5");
-    is >> a >> b >> c >> d;
-
-    REQUIRE_THROWS_AS(is >> e, RationalDivisionByZero);
-
-    is >> e >> f;
-
+    std::stringstream is("10 1/0 10/-7 10/-15 " + max_int + '/' + max_neg_int + ' ' + max_neg_int + '/' + max_neg_int + ' ' + max_neg_int + ' ' + max_neg_int + "/1 -0/5");
     std::stringstream os;
-    os << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f;
-    REQUIRE(os.str() == "-7/3 2/3 7 -3/7 -2 0");
+
+    is >> a;
+    RationalEqual(a, 10, 1);
+    os << a << ' ';
+
+    REQUIRE_THROWS_AS(is >> a, RationalDivisionByZero);
+
+    is >> a;
+    RationalEqual(a, -10, 7);
+    os << a << ' ';
+
+    is >> a;
+    RationalEqual(a, -2, 3);
+    os << a << ' ';
+
+    is >> a;
+    RationalEqual(a, -1, 1);
+    os << a << ' ';
+
+    is >> a;
+    RationalEqual(a, 1, 1);
+    os << a << ' ';
+
+    is >> a;
+    RationalEqual(a, -INT32_MAX, 1);
+    os << a << ' ';
+
+    is >> a;
+    RationalEqual(a, -INT32_MAX, 1);
+    os << a << ' ';
+
+    is >> a;
+    RationalEqual(a, 0, 1);
+    os << a;
+
+    REQUIRE(os.str() == "10 -10/7 -2/3 -1 1 " + max_neg_int + ' ' + max_neg_int + " 0");
 }
 
 TEST_CASE("Exception") {
