@@ -124,36 +124,25 @@ bool operator>=(const Rational& lhs, const Rational& rhs) {
 }
 
 std::istream& operator>>(std::istream& in, Rational& num) {
-  char input[30], numerator[15], denominator[15]{'1', '\0'};
-  in >> input;
+  int64_t in_num, in_den;
 
-  size_t slash_pos_idx = 0, input_len = strlen(input);
+  in >> in_num;
 
-  while ((slash_pos_idx < input_len) && (std::isdigit(input[slash_pos_idx]) || input[slash_pos_idx] == '-')) {
-    ++slash_pos_idx;
+  if (in.peek() == '/') {
+    in.get();
+    in >> in_den;
+
+    if (in_den == 0) {
+      throw RationalDivisionByZero();
+    } else {
+      num.numerator_ = in_num;
+      num.denominator_ = in_den;
+      num.Rationalize();
+    }
+  } else {
+    num.numerator_ = in_num;
+    num.denominator_ = 1;
   }
-
-  for (size_t i = 0; i < slash_pos_idx; ++i) {
-    numerator[i] = input[i];
-  }
-  numerator[slash_pos_idx] = '\0';
-
-  size_t i = 0;
-  for (size_t j = slash_pos_idx + 1; j < input_len; ++i, ++j) {
-    denominator[i] = input[j];
-  }
-
-  if (i != 0) {
-    denominator[i] = '\0';
-  }
-
-  num.numerator_ = std::stoll(numerator);
-  num.denominator_ = std::stoll(denominator);
-
-  if (num.denominator_ == 0) {
-    throw RationalDivisionByZero();
-  }
-  num.Rationalize();
 
   return in;
 }
