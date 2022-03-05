@@ -5,7 +5,7 @@
 #include <iostream>
 
 class LightNumBuffer {
-public:
+ public:
   explicit LightNumBuffer(size_t beg_size) {
     array_ = new int32_t[beg_size]{};
     container_size_ = beg_size;
@@ -45,7 +45,7 @@ public:
 
     if (k < kBaseDecLen) {
       for (++k; k != 0; --k) {
-      unit[k - 1] = '0';
+        unit[k - 1] = '0';
       }
     }
 
@@ -113,41 +113,41 @@ public:
     return res;
   }
 
-    friend std::ostream& operator<<(std::ostream& out, const LightNumBuffer& num) {
-      const int32_t* first_unit_ptr = num.Begin();
+  friend std::ostream& operator<<(std::ostream& out, const LightNumBuffer& num) {
+    const int32_t* first_unit_ptr = num.Begin();
 
-      out << (num.is_negative_ ? "-" : "") << *(num.End() - 1);
-      for (const int32_t* i = num.End() - 2; i >= first_unit_ptr; --i) {
-        int32_t unit = *i;
-        out << (unit / 1000);
-        unit %= 1000;
-        out << (unit / 100);
-        unit %= 100;
-        out << (unit / 10);
-        unit %= 10;
-        out << unit;
-      }
+    out << (num.is_negative_ ? "-" : "") << *(num.End() - 1);
+    for (const int32_t* i = num.End() - 2; i >= first_unit_ptr; --i) {
+      int32_t unit = *i;
+      out << (unit / 1000);
+      unit %= 1000;
+      out << (unit / 100);
+      unit %= 100;
+      out << (unit / 10);
+      unit %= 10;
+      out << unit;
+    }
 
-      return out;
+    return out;
   }
 
-    void PushBack(int32_t elem) {
-      if (size_ == container_size_) {
-        container_size_ *= 2;
-        auto* new_array = new int32_t[container_size_];
+  void PushBack(int32_t elem) {
+    if (size_ == container_size_) {
+      container_size_ *= 2;
+      auto* new_array = new int32_t[container_size_];
 
-        for (size_t i = 0; i < size_; ++i) {
-          new_array[i] = array_[i];
-        }
-
-        delete[] array_;
-        array_ = new_array;
+      for (size_t i = 0; i < size_; ++i) {
+        new_array[i] = array_[i];
       }
 
-      array_[size_++] = elem;
+      delete[] array_;
+      array_ = new_array;
+    }
+
+    array_[size_++] = elem;
   }
 
-private:
+ private:
   static const int32_t kBase = 10000;
   static const size_t kBaseDecLen = 4;
 
