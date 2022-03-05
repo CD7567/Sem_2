@@ -166,6 +166,7 @@ std::ostream& operator<<(std::ostream& out, const BigInteger& num) {
 
     return out;
 }
+
 void BigInteger::Info(BigInteger& num) {
     std::cout << "--------" << std::endl;
     std::cout << "Stored: " << num.buffer.GetSize() << std::endl;
