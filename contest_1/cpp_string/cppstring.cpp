@@ -131,6 +131,10 @@ String& operator+=(String& lhs, const String& rhs) {
   return lhs;
 }
 
+bool operator==(const String &, const String &) {
+  return false;
+}
+
 std::ostream& operator<<(std::ostream& out, const String& str) {
   out << str.CStr();
   return out;

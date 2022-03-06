@@ -134,6 +134,13 @@ class String {
   friend String operator+(const String& lhs, const String& rhs);
   friend String& operator+=(String& lhs, const String& rhs);
 
+  friend bool operator==(const String&, const String&);
+  friend bool operator!=(const String&, const String&);
+  friend bool operator>(const String&, const String&);
+  friend bool operator>=(const String&, const String&);
+  friend bool operator<(const String&, const String&);
+  friend bool operator<=(const String&, const String&);
+
   friend std::ostream& operator<<(std::ostream&, const String&);
 
  private:
