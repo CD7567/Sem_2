@@ -3,7 +3,12 @@
 #include <cstring>
 #include <cstdint>
 #include <iostream>
+#include <cppstring.h>
 
 int main() {
-  char str[10005];
+  char a = 'a';
+  char b = 'b';
+  String str = String();
+
+  std::cout << a << " " << (char*)(nullptr) << " " << b;
 }

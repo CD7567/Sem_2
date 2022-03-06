@@ -57,8 +57,10 @@ class String {
     return buffer_size_;
   }
 
-  [[nodiscard]] char* CStr() const;
-  [[nodiscard]] char* Data() const;
+  char* CStr();
+  [[nodiscard]] const char* CStr() const;
+  char* Data();
+  [[nodiscard]] const char* Data() const;
 
   [[nodiscard]] bool Empty() const {
     return (size_ == 0);

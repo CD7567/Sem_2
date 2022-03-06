@@ -147,6 +147,10 @@ TEST_CASE("Copy Assignment") {
 
 TEST_CASE("DataAccess") {
   String s = "abcdef";
+  std::ostringstream oss;
+
+  oss << s.CStr();
+  REQUIRE(oss.str() == "abcdef");
 
   {
     REQUIRE(s.Front() == 'a');
@@ -192,28 +196,19 @@ TEST_CASE("DataAccess") {
 TEST_CASE("Swap") {
   auto a = String();
   auto b = String();
-  a.
-          Swap(b);
-  CheckEqual(a,
-             "");
-  CheckEqual(b,
-             "");
+  a.Swap(b);
+  CheckEqual(a,"");
+  CheckEqual(b, "");
 
   b = String("abacaba");
-  a.
-          Swap(b);
-  CheckEqual(a,
-             "abacaba");
-  CheckEqual(b,
-             "");
+  a.Swap(b);
+  CheckEqual(a,"abacaba");
+  CheckEqual(b, "");
 
   b = String(5, 'a');
-  b.
-          Swap(a);
-  CheckEqual(a,
-             "aaaaa");
-  CheckEqual(b,
-             "abacaba");
+  b.Swap(a);
+  CheckEqual(a, "aaaaa");
+  CheckEqual(b, "abacaba");
 }
 
 TEST_CASE("Append") {
@@ -433,26 +428,19 @@ TEST_CASE("Resize") {
     String a("abacaba");
     a.Reserve(100);
     REQUIRE(a.Capacity() > a.Size());
-    a.
-
-            ShrinkToFit();
+    a.ShrinkToFit();
     REQUIRE(a.Capacity() == a.Size());
-    CheckEqual(a,
-               "abacaba");
+    CheckEqual(a,"abacaba");
 
     a.Resize(0, 'a');
-    CheckEqual(a,
-               "");
+    CheckEqual(a, "");
     REQUIRE(a.Capacity() > 0u);
-    a.
-
-            ShrinkToFit();
+    a.ShrinkToFit();
     REQUIRE(a.Size() == 0u);
     REQUIRE(a.Capacity() == 0u);
 
     a = "aba";
-    CheckEqual(a,
-               "aba");
+    CheckEqual(a, "aba");
     REQUIRE(a.Capacity() >= 3u);
   }
 }
@@ -556,10 +544,6 @@ CheckComparisonGreater(b, a
 
 TEST_CASE("Output") {
   auto oss = std::ostringstream();
-  oss << String("abacaba") << ' ' <<
-
-      String()
-
-      << ' ' << String(5, 'a');
+  oss << String("abacaba") << ' ' << String() << ' ' << String(5, 'a');
   REQUIRE(oss.str() == "abacaba  aaaaa");
 }

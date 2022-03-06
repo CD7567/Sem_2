@@ -2,38 +2,54 @@
 
 template <typename T>
 void Swap(T& first, T& second) {
-  T& tmp = first;
+  T tmp = first;
   first = second;
   second = tmp;
 }
 
-char* String::CStr() const {
+char* String::CStr() {
   char* res;
 
   if (size_ != 0) {
-    res
+    res = this->buffer_;
   } else {
-    cstr = nullptr;
+    res = nullptr;
   }
 
-  return cstr;
+  return res;
 }
-char* String::Data() const {
-  char* cstr;
+const char* String::CStr() const {
+  char* res;
 
   if (size_ != 0) {
-    cstr = new char[this->size_ + 1];
-
-    for (size_t i = 0; i < size_; ++i) {
-      cstr[i] = buffer_[i];
-    }
-
-    cstr[this->size_] = '\0';
+    res = this->buffer_;
   } else {
-    cstr = nullptr;
+    res = nullptr;
   }
 
-  return cstr;
+  return res;
+}
+char* String::Data() {
+  char* res;
+
+  if (size_ != 0) {
+    res = this->buffer_;
+  } else {
+    res = nullptr;
+  }
+
+  return res;
+}
+const char* String::Data() const {
+  char* res;
+
+  if (size_ != 0) {
+    res = this->buffer_;
+  } else {
+    res = nullptr;
+  }
+
+  return res;
 }
 
 void String::Swap(String& other) {
@@ -87,6 +103,7 @@ void String::ShrinkToFit() {
 
     delete[] buffer_;
     buffer_ = new_buffer;
+    buffer_size_ = size_;
   }
 }
 
@@ -103,7 +120,6 @@ String operator+(const String& lhs, const String& rhs) {
 
   return result;
 }
-
 String& operator+=(String& lhs, const String& rhs) {
   lhs.Reserve(lhs.size_ + rhs.size_);
 
