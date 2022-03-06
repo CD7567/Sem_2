@@ -112,12 +112,12 @@ bool operator<(const Rational& lhs, const Rational& rhs) {
   return help.numerator_ < 0;
 }
 bool operator<=(const Rational& lhs, const Rational& rhs) {
-  return !(lhs > rhs);
+  return (lhs < rhs) || (lhs == rhs);
 }
 bool operator>(const Rational& lhs, const Rational& rhs) {
   Rational help = lhs - rhs;
 
-  return help.numerator_ > 0;
+  return 0 < help.numerator_;
 }
 bool operator>=(const Rational& lhs, const Rational& rhs) {
   return !(lhs < rhs);
