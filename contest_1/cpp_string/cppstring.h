@@ -13,30 +13,39 @@ class StringOutOfRange : public std::out_of_range {
 class String {
  public:
   String() : size_(0), buffer_size_(0), buffer_(nullptr){};
-  explicit String(size_t beg_size, char symbol = '\0') : size_(beg_size), buffer_size_(beg_size), buffer_(new char[beg_size]) {
-    for (size_t i = 0; i < size_; ++i) {
-      buffer_[i] = symbol;
+
+  explicit String(size_t beg_size, char symbol = '\0') : size_(beg_size), buffer_size_(beg_size) {
+    if (beg_size == 0) {
+      buffer_ = nullptr;
+    } else {
+      buffer_ = new char[beg_size];
+      for (size_t i = 0; i < size_; ++i) {
+        buffer_[i] = symbol;
+      }
     }
   }
-  String(const char* cstr) { // NOLINT
+
+  String(const char* cstr) {  // NOLINT
     size_t cstr_size = CStrLen(cstr);
     size_ = cstr_size;
     buffer_size_ = cstr_size;
 
     buffer_ = new char[cstr_size];
-    for (int i = 0; i < cstr_size; ++i) {
+    for (size_t i = 0; i < cstr_size; ++i) {
       buffer_[i] = cstr[i];
     }
   }
+
   String(const char* cstr, size_t upper_bound) {
     size_ = upper_bound;
     buffer_size_ = upper_bound;
 
     buffer_ = new char[upper_bound];
-    for (int i = 0; i < upper_bound; ++i) {
+    for (size_t i = 0; i < upper_bound; ++i) {
       buffer_[i] = cstr[i];
     }
   }
+
   String(const String& src) : size_(src.size_), buffer_size_(src.buffer_size_), buffer_(new char[src.buffer_size_]) {
     for (size_t i = 0; i < size_; ++i) {
       buffer_[i] = src.buffer_[i];
@@ -50,16 +59,21 @@ class String {
   [[nodiscard]] size_t Size() const {
     return size_;
   }
+
   [[nodiscard]] size_t Length() const {
     return size_;
   }
+
   [[nodiscard]] size_t Capacity() const {
     return buffer_size_;
   }
 
   char* CStr();
+
   [[nodiscard]] const char* CStr() const;
+
   char* Data();
+
   [[nodiscard]] const char* Data() const;
 
   [[nodiscard]] bool Empty() const {
@@ -74,12 +88,15 @@ class String {
 
   // Needs guard?
   char PopBack() {
-    return buffer_[size_--];
+    return buffer_[--size_];
   }
+
   void PushBack(char);
 
   void Reserve(size_t);
+
   void Resize(size_t, char);
+
   void ShrinkToFit();
 
   char& At(size_t idx) {
@@ -89,21 +106,27 @@ class String {
       return buffer_[idx];
     }
   }
+
   [[nodiscard]] const char& At(size_t idx) const {
     if (idx >= size_) {
       throw StringOutOfRange();
     } else {
       return buffer_[idx];
-    }  }
+    }
+  }
+
   char& Front() {
     return buffer_[0];
   }
+
   [[nodiscard]] const char& Front() const {
     return buffer_[0];
   }
+
   char& Back() {
     return buffer_[size_ - 1];
   }
+
   [[nodiscard]] const char& Back() const {
     return buffer_[size_ - 1];
   }
@@ -112,12 +135,16 @@ class String {
     if (this != &src) {
       size_ = src.size_;
       buffer_size_ = src.buffer_size_;
-
       delete[] this->buffer_;
-      this->buffer_ = new char[buffer_size_];
 
-      for (size_t i = 0; i < size_; ++i) {
-        this->buffer_[i] = src.buffer_[i];
+      if (src.size_ != 0) {
+        this->buffer_ = new char[buffer_size_];
+
+        for (size_t i = 0; i < size_; ++i) {
+          this->buffer_[i] = src.buffer_[i];
+        }
+      } else {
+        this->buffer_ = nullptr;
       }
     }
 
@@ -127,18 +154,25 @@ class String {
   char& operator[](size_t idx) {
     return buffer_[idx];
   }
+
   const char& operator[](size_t idx) const {
     return buffer_[idx];
   }
 
   friend String operator+(const String& lhs, const String& rhs);
+
   friend String& operator+=(String& lhs, const String& rhs);
 
   friend bool operator==(const String&, const String&);
+
   friend bool operator!=(const String&, const String&);
+
   friend bool operator>(const String&, const String&);
+
   friend bool operator>=(const String&, const String&);
+
   friend bool operator<(const String&, const String&);
+
   friend bool operator<=(const String&, const String&);
 
   friend std::ostream& operator<<(std::ostream&, const String&);

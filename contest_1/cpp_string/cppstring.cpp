@@ -13,22 +13,24 @@ char* String::CStr() {
   if (size_ != 0) {
     res = this->buffer_;
   } else {
-    res = nullptr;
+    res = new char{'\0'};
   }
 
   return res;
 }
+
 const char* String::CStr() const {
   char* res;
 
   if (size_ != 0) {
     res = this->buffer_;
   } else {
-    res = nullptr;
+    res = new char{'\0'};
   }
 
   return res;
 }
+
 char* String::Data() {
   char* res;
 
@@ -40,6 +42,7 @@ char* String::Data() {
 
   return res;
 }
+
 const char* String::Data() const {
   char* res;
 
@@ -71,7 +74,7 @@ void String::PushBack(char elem) {
 
 void String::Reserve(size_t new_capacity) {
   if (new_capacity > buffer_size_) {
-    char* new_buffer = new char[new_capacity];
+    auto* new_buffer = new char[new_capacity];
     buffer_size_ = new_capacity;
 
     for (size_t i = 0; i < size_; ++i) {
@@ -82,6 +85,7 @@ void String::Reserve(size_t new_capacity) {
     buffer_ = new_buffer;
   }
 }
+
 void String::Resize(size_t new_size, char symbol) {
   if (new_size > buffer_size_) {
     Reserve(new_size);
@@ -93,9 +97,10 @@ void String::Resize(size_t new_size, char symbol) {
 
   size_ = new_size;
 }
+
 void String::ShrinkToFit() {
   if (size_ != buffer_size_) {
-    char* new_buffer = new char[size_];
+    auto* new_buffer = new char[size_];
 
     for (size_t i = 0; i < size_; ++i) {
       new_buffer[i] = buffer_[i];
@@ -120,19 +125,94 @@ String operator+(const String& lhs, const String& rhs) {
 
   return result;
 }
+
 String& operator+=(String& lhs, const String& rhs) {
   lhs.Reserve(lhs.size_ + rhs.size_);
-
   for (size_t i = 0; i < rhs.size_; ++i) {
     lhs[lhs.size_ + i] = rhs[i];
   }
-
   lhs.size_ += rhs.size_;
   return lhs;
 }
 
-bool operator==(const String &, const String &) {
-  return false;
+bool operator==(const String& lhs, const String& rhs) {
+  bool equals = true;
+
+  if (lhs.size_ == rhs.size_) {
+    for (size_t i = 0; (i < lhs.size_) && (i < rhs.size_) && equals; ++i) {
+      equals = (lhs.buffer_[i] == rhs.buffer_[i]);
+    }
+  } else {
+    equals = false;
+  }
+
+  return equals;
+}
+
+bool operator!=(const String& lhs, const String& rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator<(const String& lhs, const String& rhs) {
+  bool less = true;
+
+  if (lhs.size_ != 0 && rhs.size_ != 0) {
+    size_t idx = 0;
+
+    for (; (idx < lhs.size_) && (idx < rhs.size_) && (lhs[idx] == rhs[idx]); ++idx) {
+    }
+
+    if (idx != lhs.size_) {
+      if (idx == rhs.size_) {
+        less = false;
+      } else {
+        less = lhs[idx] < rhs[idx];
+      }
+    } else {
+      if (idx == rhs.size_) {
+        less = false;
+      }
+    }
+  } else {
+    less = (lhs.size_ == 0) && (rhs.size_ != 0);
+  }
+
+  return less;
+}
+
+bool operator<=(const String& lhs, const String& rhs) {
+  return (lhs < rhs) || (lhs == rhs);
+}
+
+bool operator>(const String& lhs, const String& rhs) {
+  bool greater = true;
+
+  if (lhs.size_ != 0 && rhs.size_ != 0) {
+    size_t idx = 0;
+
+    for (; (idx < lhs.size_) && (idx < rhs.size_) && (lhs[idx] == rhs[idx]); ++idx) {
+    }
+
+    if (idx != rhs.size_) {
+      if (idx == lhs.size_) {
+        greater = false;
+      } else {
+        greater = rhs[idx] < lhs[idx];
+      }
+    } else {
+      if (idx == lhs.size_) {
+        greater = false;
+      }
+    }
+  } else {
+    greater = (lhs.size_ != 0) && (rhs.size_ == 0);
+  }
+
+  return greater;
+}
+
+bool operator>=(const String& lhs, const String& rhs) {
+  return !(lhs < rhs);
 }
 
 std::ostream& operator<<(std::ostream& out, const String& str) {

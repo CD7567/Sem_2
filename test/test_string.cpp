@@ -197,12 +197,12 @@ TEST_CASE("Swap") {
   auto a = String();
   auto b = String();
   a.Swap(b);
-  CheckEqual(a,"");
+  CheckEqual(a, "");
   CheckEqual(b, "");
 
   b = String("abacaba");
   a.Swap(b);
-  CheckEqual(a,"abacaba");
+  CheckEqual(a, "abacaba");
   CheckEqual(b, "");
 
   b = String(5, 'a');
@@ -217,13 +217,8 @@ TEST_CASE("Append") {
     String s;
     std::string actual("a");
     s.PushBack('a');
-    for (
-            size_t size = 1u;
-            size < 1'000'000; size *= 2u) {
-      for (
-              size_t i = 0u;
-              i < size;
-              ++i) {
+    for (size_t size = 1u; size < 1'000'000; size *= 2u) {
+      for (size_t i = 0u; i < size; ++i) {
         s.PushBack(static_cast<char>('a' + i % 26));
         actual.push_back(static_cast<char>('a' + i % 26));
       }
@@ -232,27 +227,22 @@ TEST_CASE("Append") {
       );
     }
   }
-
+  std::cout << "After PushBack" << std::endl;
   // +=
   {
     const String other = "abacaba";
     String s;
-    (s += other) +=
-            other;
-    CheckEqual(s,
-               "abacabaabacaba");
+    (s += other) += other;
+    CheckEqual(s, "abacabaabacaba");
     std::string actual("abacabaabacaba");
-    for (
-            size_t i = 0;
-            i < 100000; ++i) {
-      s +=
-              other;
+    for (size_t i = 0; i < 100000; ++i) {
+      s += other;
       actual += "abacaba";
+      std::cout << i << std::endl;
     }
-    CheckEqual(s, actual
-    );
+    CheckEqual(s, actual);
   }
-
+  std::cout << "After +=" << std::endl;
   // +
   {
     {
@@ -430,7 +420,7 @@ TEST_CASE("Resize") {
     REQUIRE(a.Capacity() > a.Size());
     a.ShrinkToFit();
     REQUIRE(a.Capacity() == a.Size());
-    CheckEqual(a,"abacaba");
+    CheckEqual(a, "abacaba");
 
     a.Resize(0, 'a');
     CheckEqual(a, "");
@@ -445,7 +435,7 @@ TEST_CASE("Resize") {
   }
 }
 
-/*void CheckComparisonEqual(const String &lhs, const String &rhs) {
+void CheckComparisonEqual(const String &lhs, const String &rhs) {
   REQUIRE(lhs == rhs);
   REQUIRE(lhs <= rhs);
   REQUIRE(lhs >= rhs);
@@ -472,75 +462,61 @@ void CheckComparisonGreater(const String &lhs, const String &rhs) {
   REQUIRE(lhs > rhs);
 }
 
-TEST_CASE("Comparisons", "[String]") {
-{
-String a;
-String b;
-CheckComparisonEqual(a, b
-);
-}
+TEST_CASE("Comparisons") {
+  {
+    String a;
+    String b;
+    CheckComparisonEqual(a, b);
+  }
 
-{
-String a;
-String b(1, 'a');
-CheckComparisonLess(a, b
-);
-CheckComparisonGreater(b, a
-);
-}
+  {
+    String a;
+    String b(1, 'a');
+    CheckComparisonLess(a, b);
+    CheckComparisonGreater(b, a);
+  }
 
-{
-String a("ac");
-String b("b");
-CheckComparisonLess(a, b
-);
-CheckComparisonGreater(b, a
-);
-}
+  {
+    String a("ac");
+    String b("b");
+    CheckComparisonLess(a, b);
+    CheckComparisonGreater(b, a);
+  }
 
-{
-String a("abc");
-String b("aa");
-CheckComparisonLess(b, a
-);
-CheckComparisonGreater(a, b
-);
-}
+  {
+    String a("abc");
+    String b("aa");
+    CheckComparisonLess(b, a);
+    CheckComparisonGreater(a, b);
+  }
 
-{
-String a("abcd");
-String b("abcd");
-CheckComparisonEqual(a, b
-);
-}
+  {
+    String a("abcd");
+    String b("abcd");
+    CheckComparisonEqual(a, b);
+  }
 
-{
-String a("abcd");
-String b("abc");
-CheckComparisonLess(b, a
-);
-CheckComparisonGreater(a, b
-);
-}
+  {
+    String a("abcd");
+    String b("abc");
+    CheckComparisonLess(b, a);
+    CheckComparisonGreater(a, b);
+  }
 
-{
-String a("adfh");
-String b("bceg");
-CheckComparisonLess(a, b
-);
-CheckComparisonGreater(b, a
-);
-}
+  {
+    String a("adfh");
+    String b("bceg");
+    CheckComparisonLess(a, b);
+    CheckComparisonGreater(b, a);
+  }
 
-{
-String a("abce");
-String b("abde");
-CheckComparisonLess(a, b
-);
-CheckComparisonGreater(b, a
-);
+  {
+    String a("abce");
+    String b("abde");
+    CheckComparisonLess(a, b);
+    CheckComparisonGreater(b, a);
+  }
 }
-}*/
 
 TEST_CASE("Output") {
   auto oss = std::ostringstream();

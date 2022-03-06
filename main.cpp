@@ -6,9 +6,8 @@
 #include <cppstring.h>
 
 int main() {
-  char a = 'a';
-  char b = 'b';
-  String str = String();
+  const String a;
+  const String b("caba");
 
-  std::cout << a << " " << (char*)(nullptr) << " " << b;
+  std::cout << (a + b == "caba");
 }
