@@ -4,120 +4,137 @@
 #include <cstdint>
 
 class BigInteger {
-public:
-    BigInteger() = default;
-    explicit BigInteger(const char*);
-    BigInteger(long long); // NOLINT
-    BigInteger(const BigInteger&);
+ public:
+  BigInteger() = default;
 
-    BigInteger& operator=(const BigInteger&) = default;
-    friend BigInteger operator+(const BigInteger&);
-    friend BigInteger operator-(const BigInteger&);
-    friend BigInteger operator+(const BigInteger&, const BigInteger&);
-    friend BigInteger operator-(const BigInteger&, const BigInteger&);
+  explicit BigInteger(const char *);
 
-    friend std::istream& operator>>(std::istream& in, BigInteger&);
-    friend std::ostream& operator<<(std::ostream& out, const BigInteger& num);
+  BigInteger(long long); // NOLINT
+  BigInteger(const BigInteger &);
 
-    friend bool operator==(const BigInteger& lhs, const BigInteger& rhs);
+  BigInteger &operator=(const BigInteger &) = default;
 
-    [[nodiscard]]
-    bool IsNegative() const {
-        return is_negative;
-    }
+  friend BigInteger operator+(const BigInteger &);
 
-    [[deprecated]]
-    static void Info(BigInteger&);
+  friend BigInteger operator-(const BigInteger &);
 
-    void Invert() {
-        is_negative = !is_negative;
-    }
+  friend BigInteger operator+(const BigInteger &, const BigInteger &);
 
-    template <typename T>
-    class Buffer {
-    public:
-        explicit Buffer(size_t beg_size);
-        Buffer(const Buffer&);
+  friend BigInteger operator-(const BigInteger &, const BigInteger &);
 
-        ~Buffer() {
-            delete[] array;
-        };
+  friend std::istream &operator>>(std::istream &in, BigInteger &);
 
-        [[nodiscard]] size_t GetSize() const {
-            return size;
-        }
-        [[nodiscard]] size_t GetContainerSize() const {
-            return container_size;
-        };
-        void SetSize(size_t new_size) {
-            size = new_size;
-        }
+  friend std::ostream &operator<<(std::ostream &out, const BigInteger &num);
 
-        T* Begin() {
-            return array;
-        }
-        T* End() {
-            return array + size;
-        }
-        [[nodiscard]] const T* Begin() const {
-            return array;
-        }
-        [[nodiscard]] const T* End() const {
-            return array + size;
-        }
+  friend bool operator==(const BigInteger &lhs, const BigInteger &rhs);
 
-        T& operator[](size_t idx) {
-            return array[idx];
-        };
-        const T& operator[](size_t idx) const {
-            return array[idx];
-        };
+  [[nodiscard]]
+  bool IsNegative() const {
+    return is_negative_;
+  }
 
-        Buffer& operator=(const Buffer& src) {
-            delete[] array;
-            size = src.size;
-            container_size = src.container_size;
+  [[deprecated]]
+  static void Info(BigInteger &);
 
-            array = new T[container_size];
+  void Invert() {
+    is_negative_ = !is_negative_;
+  }
 
-            for (int i = 0; i < size; ++i) {
-                array[i] = src.array[i];
-            }
+  template<typename T>
+  class Buffer {
+   public:
+    explicit Buffer(size_t beg_size);
 
-            return *this;
-        }
+    Buffer(const Buffer &);
 
-        void PushBack(T elem);
-
-        void Resize(size_t new_size) {
-            size_t upper_bound = std::min(new_size, size);
-            T* new_array = new T[new_size];
-
-            for (size_t i = 0; i < upper_bound; ++i) {
-                new_array[i] = array[i];
-            }
-
-            delete[] array;
-            array = new_array;
-            size = new_size;
-            container_size = new_size;
-        }
-
-    private:
-        T* array;
-        size_t size = 0;
-        size_t container_size;
+    ~Buffer() {
+      delete[] array_;
     };
-private:
-    const static int32_t BASE = 10000;
-    const static size_t BASE_DEC_LEN = 4;
 
-    bool is_negative = false;
-    Buffer<int32_t> buffer = Buffer<int32_t>(2);
+    [[nodiscard]] size_t GetSize() const {
+      return size_;
+    }
 
-    void Normalize();
-    void CheckSign();
-public:
-    static void RawSum(const BigInteger&, const BigInteger&, BigInteger&);
-    static void RawSubtract(const BigInteger&, const BigInteger&, BigInteger&);
+    [[nodiscard]] size_t GetContainerSize() const {
+      return container_size_;
+    };
+
+    void SetSize(size_t new_size) {
+      size_ = new_size;
+    }
+
+    T *Begin() {
+      return array_;
+    }
+
+    T *End() {
+      return array_ + size_;
+    }
+
+    [[nodiscard]] const T *Begin() const {
+      return array_;
+    }
+
+    [[nodiscard]] const T *End() const {
+      return array_ + size_;
+    }
+
+    T &operator[](size_t idx) {
+      return array_[idx];
+    };
+
+    const T &operator[](size_t idx) const {
+      return array_[idx];
+    };
+
+    Buffer &operator=(const Buffer &src) {
+      delete[] array_;
+      size_ = src.size_;
+      container_size_ = src.container_size_;
+
+      array_ = new T[container_size_];
+
+      for (int i = 0; i < size_; ++i) {
+        array_[i] = src.array_[i];
+      }
+
+      return *this;
+    }
+
+    void PushBack(T elem);
+
+    void Resize(size_t new_size) {
+      size_t upper_bound = std::min(new_size, size_);
+      T *new_array = new T[new_size];
+
+      for (size_t i = 0; i < upper_bound; ++i) {
+        new_array[i] = array_[i];
+      }
+
+      delete[] array_;
+      array_ = new_array;
+      size_ = new_size;
+      container_size_ = new_size;
+    }
+
+   private:
+    T *array_;
+    size_t size_ = 0;
+    size_t container_size_;
+  };
+
+ private:
+  const static int32_t kBase = 10000;
+  const static size_t kBaseDecLen = 4;
+
+  bool is_negative_ = false;
+  Buffer<int32_t> buffer_ = Buffer<int32_t>(2);
+
+  void Normalize();
+
+  void CheckSign();
+
+  static void RawSum(const BigInteger &, const BigInteger &, BigInteger &);
+
+  static void RawSubtract(const BigInteger &, const BigInteger &, BigInteger &);
 };

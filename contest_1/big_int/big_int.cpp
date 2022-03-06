@@ -8,256 +8,249 @@
 // Realization of BigInteger class
 // ===========================================================
 
-BigInteger::BigInteger(const char* src) {
-    bool is_src_negative = (src[0] == '-');
-    bool has_sign = !std::isdigit(src[0]);
-    size_t dec_length = strlen(src);
-    char* unit = new char[BASE_DEC_LEN];
-    is_negative = is_src_negative;
+BigInteger::BigInteger(const char *src) {
+  bool is_src_negative = (src[0] == '-');
+  bool has_sign = !std::isdigit(src[0]);
+  size_t dec_length = strlen(src);
+  char *unit = new char[kBaseDecLen];
+  is_negative_ = is_src_negative;
 
-    size_t i;
-    size_t k;
-    for (i = dec_length - 1; i >= BASE_DEC_LEN; i -= BASE_DEC_LEN) {
-        for (size_t j = BASE_DEC_LEN; j != 0; --j) {
-            unit[j - 1] = src[i + j - BASE_DEC_LEN];
-        }
-
-        buffer.PushBack(std::stoi(unit));
+  size_t i;
+  size_t k;
+  for (i = dec_length - 1; i >= kBaseDecLen; i -= kBaseDecLen) {
+    for (size_t j = kBaseDecLen; j != 0; --j) {
+      unit[j - 1] = src[i + j - kBaseDecLen];
     }
 
-    for (i += 1, k = BASE_DEC_LEN - 1 ; i > static_cast<size_t>(has_sign); --i, --k) {
-        unit[k] = src[i - 1];
-    }
+    buffer_.PushBack(std::stoi(unit));
+  }
 
-    if (k < BASE_DEC_LEN) {
-        for (++k;  k != 0; --k) {
-            unit[k - 1] = '0';
-        }
-    }
+  for (i += 1, k = kBaseDecLen - 1; i > static_cast<size_t>(has_sign); --i, --k) {
+    unit[k] = src[i - 1];
+  }
 
-    buffer.PushBack(std::stoi(unit));
-    delete[] unit;
+  if (k < kBaseDecLen) {
+    for (++k; k != 0; --k) {
+      unit[k - 1] = '0';
+    }
+  }
+
+  buffer_.PushBack(std::stoi(unit));
+  delete[] unit;
 }
-
 BigInteger::BigInteger(long long src) {
-    if (src < 0) {
-        is_negative = true;
-        src = -src;
-    }
+  if (src < 0) {
+    is_negative_ = true;
+    src = -src;
+  }
 
-    if (src == 0) {
-        buffer.PushBack(0);
+  if (src == 0) {
+    buffer_.PushBack(0);
+  } else {
+    while (src > 0) {
+      buffer_.PushBack(static_cast<int32_t>(src % kBase));
+      src /= kBase;
+    }
+  }
+}
+BigInteger::BigInteger(const BigInteger &src) {
+  is_negative_ = src.is_negative_;
+  buffer_ = Buffer(src.buffer_);
+}
+
+BigInteger operator+(const BigInteger &rhs) {
+  return rhs;
+}
+BigInteger operator-(const BigInteger &rhs) {
+  BigInteger copy = rhs;
+  copy.Invert();
+
+  return copy;
+}
+
+BigInteger operator+(const BigInteger &lhs, const BigInteger &rhs) {
+  BigInteger res;
+
+  if (lhs.is_negative_) {
+    if (rhs.is_negative_) {
+      BigInteger::RawSum(lhs, rhs, res);
+      res.is_negative_ = true;
     } else {
-        while (src > 0) {
-            buffer.PushBack(static_cast<int32_t>(src % BASE));
-            src /= BASE;
-        }
+      BigInteger::RawSubtract(lhs, rhs, res);
+      res.is_negative_ = !res.is_negative_;
     }
-}
-
-BigInteger::BigInteger(const BigInteger& src) {
-    is_negative = src.is_negative;
-    buffer = Buffer(src.buffer);
-}
-
-BigInteger operator+(const BigInteger& rhs) {
-    return rhs;
-}
-BigInteger operator-(const BigInteger& rhs) {
-    BigInteger copy = rhs;
-    copy.Invert();
-
-    return copy;
-}
-
-BigInteger operator+(const BigInteger& lhs, const BigInteger& rhs) {
-    BigInteger res;
-
-    if (lhs.buffer.GetSize() < rhs.buffer.GetSize()) {
-        res = rhs + lhs;
+  } else {
+    if (rhs.is_negative_) {
+      BigInteger::RawSubtract(lhs, rhs, res);
     } else {
-        if (lhs.is_negative) {
-            if (rhs.is_negative) {
-                BigInteger::RawSum(lhs, rhs, res);
-                res.is_negative = true;
-            } else {
-                BigInteger::RawSubtract(lhs, rhs, res);
-                res.is_negative = !res.is_negative;
-            }
-        } else {
-            if (rhs.is_negative) {
-                BigInteger::RawSubtract(lhs, rhs, res);
-            } else {
-                BigInteger::RawSum(lhs, rhs, res);
-            }
-        }
+      BigInteger::RawSum(lhs, rhs, res);
     }
+  }
 
-    res.CheckSign();
-    return res;
+  res.CheckSign();
+  return res;
 }
-BigInteger operator-(const BigInteger& lhs, const BigInteger& rhs) {
-    BigInteger res;
+BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs) {
+  BigInteger res;
 
-    if (lhs.buffer.GetSize() < rhs.buffer.GetSize()) {
-        res = rhs - lhs;
-        res.is_negative = !res.is_negative;
+  if (lhs.is_negative_) {
+    if (rhs.is_negative_) {
+      BigInteger::RawSubtract(lhs, rhs, res);
+      res.is_negative_ = !res.is_negative_;
     } else {
-        if (lhs.is_negative) {
-            if (rhs.is_negative) {
-                BigInteger::RawSubtract(lhs, rhs, res);
-                res.is_negative = !res.is_negative;
-            } else {
-                BigInteger::RawSum(lhs, rhs, res);
-                res.is_negative = true;
-            }
-        } else {
-            if (rhs.is_negative) {
-                BigInteger::RawSum(lhs, rhs, res);
-            } else {
-                BigInteger::RawSubtract(lhs, rhs, res);
-            }
-        }
+      BigInteger::RawSum(lhs, rhs, res);
+      res.is_negative_ = true;
     }
-
-    res.CheckSign();
-    return res;
-}
-
-bool operator==(const BigInteger& lhs, const BigInteger& rhs) {
-    bool equals = true;
-
-    if ((lhs.buffer.GetSize() == rhs.buffer.GetSize()) && (lhs.is_negative == rhs.is_negative)) {
-        size_t upper_bound = lhs.buffer.GetSize();
-
-        for (size_t i = 0; (i < upper_bound) && equals; ++i) {
-            equals = (lhs.buffer[i] == rhs.buffer[i]);
-        }
+  } else {
+    if (rhs.is_negative_) {
+      BigInteger::RawSum(lhs, rhs, res);
     } else {
-        equals = false;
+      BigInteger::RawSubtract(lhs, rhs, res);
     }
+  }
 
-    return equals;
+  res.CheckSign();
+  return res;
 }
 
-std::istream& operator>>(std::istream& in, BigInteger& num) {
-    char src[30005];
-    in >> src;
+bool operator==(const BigInteger &lhs, const BigInteger &rhs) {
+  bool equals = true;
 
-    num = BigInteger(src);
+  if ((lhs.buffer_.GetSize() == rhs.buffer_.GetSize()) && (lhs.is_negative_ == rhs.is_negative_)) {
+    size_t upper_bound = lhs.buffer_.GetSize();
 
-    return in;
+    for (size_t i = 0; (i < upper_bound) && equals; ++i) {
+      equals = (lhs.buffer_[i] == rhs.buffer_[i]);
+    }
+  } else {
+    equals = false;
+  }
+
+  return equals;
 }
 
-std::ostream& operator<<(std::ostream& out, const BigInteger& num) {
-    const int32_t* first_unit_ptr = num.buffer.Begin();
+std::istream &operator>>(std::istream &in, BigInteger &num) {
+  char src[30005];
+  in >> src;
 
-    out << (num.is_negative ? "-" : "") << *(num.buffer.End() - 1);
-    for (const int32_t* i = num.buffer.End() - 2; i >= first_unit_ptr; --i) {
-        int32_t unit = *i;
-        out << (unit / 1000);
-        unit %= 1000;
-        out << (unit / 100);
-        unit %= 100;
-        out << (unit / 10);
-        unit %= 10;
-        out << unit;
-    }
+  num = BigInteger(src);
 
-    return out;
+  return in;
+}
+std::ostream &operator<<(std::ostream &out, const BigInteger &num) {
+  const int32_t *first_unit_ptr = num.buffer_.Begin();
+
+  out << (num.is_negative_ ? "-" : "") << *(num.buffer_.End() - 1);
+  for (const int32_t *i = num.buffer_.End() - 2; i >= first_unit_ptr; --i) {
+    int32_t unit = *i;
+    out << (unit / 1000);
+    unit %= 1000;
+    out << (unit / 100);
+    unit %= 100;
+    out << (unit / 10);
+    unit %= 10;
+    out << unit;
+  }
+
+  return out;
 }
 
-void BigInteger::Info(BigInteger& num) {
-    std::cout << "--------" << std::endl;
-    std::cout << "Stored: " << num.buffer.GetSize() << std::endl;
-    std::cout << "Container: " << num.buffer.GetContainerSize() << std::endl;
-    std::cout << "Number: " << (num.is_negative ? "-" : "") << "|";
+void BigInteger::Info(BigInteger &num) {
+  std::cout << "--------" << std::endl;
+  std::cout << "Stored: " << num.buffer_.GetSize() << std::endl;
+  std::cout << "Container: " << num.buffer_.GetContainerSize() << std::endl;
+  std::cout << "Number: " << (num.is_negative_ ? "-" : "") << "|";
 
-    for (size_t i = num.buffer.GetSize(); i > 0; --i) {
-        std::cout << num.buffer[i - 1] << "|";
-    }
+  for (size_t i = num.buffer_.GetSize(); i > 0; --i) {
+    std::cout << num.buffer_[i - 1] << "|";
+  }
 
-    std::cout << std::endl << "--------" << std::endl;
+  std::cout << std::endl << "--------" << std::endl;
 }
 
-void BigInteger::RawSum(const BigInteger& lhs, const BigInteger& rhs, BigInteger& res) {
-    size_t sum_bound = std::min(lhs.buffer.GetSize(), rhs.buffer.GetSize());
+void BigInteger::RawSum(const BigInteger &lhs, const BigInteger &rhs, BigInteger &res) {
+  size_t sum_bound = std::min(lhs.buffer_.GetSize(), rhs.buffer_.GetSize());
 
-    res.buffer.Resize(std::max(lhs.buffer.GetSize(), rhs.buffer.GetSize()));
+  res.buffer_.Resize(std::max(lhs.buffer_.GetSize(), rhs.buffer_.GetSize()));
 
-    for (size_t i = 0; i < sum_bound; ++i) {
-        res.buffer[i] = lhs.buffer[i] + rhs.buffer[i];
-    }
+  for (size_t i = 0; i < sum_bound; ++i) {
+    res.buffer_[i] = lhs.buffer_[i] + rhs.buffer_[i];
+  }
 
-    for (size_t i = sum_bound; i < lhs.buffer.GetSize(); ++i) {
-        res.buffer[i] = lhs.buffer[i];
-    }
+  for (size_t i = sum_bound; i < lhs.buffer_.GetSize(); ++i) {
+    res.buffer_[i] = lhs.buffer_[i];
+  }
 
-    for (size_t i = sum_bound; i < rhs.buffer.GetSize(); ++i) {
-        res.buffer[i] = rhs.buffer[i];
-    }
+  for (size_t i = sum_bound; i < rhs.buffer_.GetSize(); ++i) {
+    res.buffer_[i] = rhs.buffer_[i];
+  }
 
-    res.Normalize();
+  res.Normalize();
 }
+void BigInteger::RawSubtract(const BigInteger &lhs, const BigInteger &rhs, BigInteger &res) {
+  size_t l_size = lhs.buffer_.GetSize();
+  size_t r_size = rhs.buffer_.GetSize();
+  size_t subtraction_bound = std::min(l_size, r_size);
+  size_t upper_bound = std::max(l_size, r_size);
 
-void BigInteger::RawSubtract(const BigInteger& lhs, const BigInteger& rhs, BigInteger& res) {
-    // Assuming rhs is not longer than lhs
-    size_t subtr_bound = rhs.buffer.GetSize();
-    size_t upper_bound = lhs.buffer.GetSize();
+  res.buffer_.Resize(upper_bound);
 
-    res.buffer.Resize(upper_bound);
+  for (size_t i = 0; i < subtraction_bound; ++i) {
+    res.buffer_[i] = lhs.buffer_[i] - rhs.buffer_[i];
+  }
 
-    for (size_t i = 0; i < subtr_bound; ++i) {
-        res.buffer[i] = lhs.buffer[i] - rhs.buffer[i];
+  for (size_t i = subtraction_bound; i < l_size; ++i) {
+    res.buffer_[i] = lhs.buffer_[i];
+  }
+
+  for (size_t i = subtraction_bound; i < r_size; ++i) {
+    res.buffer_[i] = -rhs.buffer_[i];
+  }
+
+  for (size_t i = 0; i < upper_bound - 1; ++i) {
+    if (res.buffer_[i] < 0) {
+      res.buffer_[i + 1]--;
+      res.buffer_[i] += kBase;
     }
+  }
 
-    for (size_t i = subtr_bound; i < upper_bound; ++i) {
-        res.buffer[i] = lhs.buffer[i];
-    }
-
+  if (res.buffer_[upper_bound - 1] < 0) {
     for (size_t i = 0; i < upper_bound - 1; ++i) {
-        if (res.buffer[i] < 0) {
-            res.buffer[i + 1]--;
-            res.buffer[i] += BASE;
-        }
+      if (res.buffer_[i] != 0) {
+        res.buffer_[i] = kBase - res.buffer_[i];
+        res.buffer_[i + 1]++;
+      }
     }
+    res.buffer_[upper_bound - 1] = -res.buffer_[upper_bound - 1];
+    res.is_negative_ = true;
+  }
 
-    if (res.buffer[upper_bound - 1] < 0) {
-        for (size_t i = 0; i < upper_bound - 1; ++i) {
-            if (res.buffer[i] != 0) {
-                res.buffer[i] = BASE - res.buffer[i];
-                res.buffer[i + 1]++;
-            }
-        }
-        res.buffer[upper_bound - 1] = -res.buffer[upper_bound - 1];
-        res.is_negative = true;
-    }
+  size_t end_size;
+  for (end_size = upper_bound; (end_size > 1) && (res.buffer_[end_size - 1] == 0); --end_size) {
+  }
 
-    size_t end_size;
-    for (end_size = upper_bound; (end_size > 1) && (res.buffer[end_size - 1] == 0); --end_size) {
-    }
-
-    res.buffer.SetSize(end_size);
+  res.buffer_.SetSize(end_size);
 }
 
 void BigInteger::Normalize() {
-    size_t size = buffer.GetSize();
+  size_t size = buffer_.GetSize();
 
-    for (size_t i = 0; i < size - 1; ++i) {
-        buffer[i + 1] += buffer[i] / BASE;
-        buffer[i] %= BASE;
+  for (size_t i = 0; i < size - 1; ++i) {
+    if (buffer_[i] >= kBase) {
+      buffer_[i + 1] += buffer_[i] / kBase;
+      buffer_[i] %= kBase;
     }
+  }
 
-    if (buffer[size - 1] > BASE) {
-        buffer.PushBack(buffer[size - 1] / BASE);
-        buffer[size - 1] %= BASE;
-    }
+  if (buffer_[size - 1] >= kBase) {
+    buffer_.PushBack(buffer_[size - 1] / kBase);
+    buffer_[size - 1] %= kBase;
+  }
 }
-
 void BigInteger::CheckSign() {
-    if ((buffer.GetSize() == 1) && (buffer[0] == 0)) {
-        is_negative = false;
-    }
+  if ((buffer_.GetSize() == 1) && (buffer_[0] == 0)) {
+    is_negative_ = false;
+  }
 }
 
 // ===========================================================
@@ -266,36 +259,36 @@ void BigInteger::CheckSign() {
 
 #define Buff BigInteger::Buffer
 
-template <typename T>
+template<typename T>
 Buff<T>::Buffer(size_t beg_size) {
-    array = new T[beg_size]{};
-    container_size = beg_size;
+  array_ = new T[beg_size]{};
+  container_size_ = beg_size;
 }
 
-template <typename T>
-Buff<T>::Buffer(const Buffer<T>& src) {
-    size = src.size;
-    container_size = src.container_size;
-    array = new T[container_size]{};
+template<typename T>
+Buff<T>::Buffer(const Buffer<T> &src) {
+  size_ = src.size_;
+  container_size_ = src.container_size_;
+  array_ = new T[container_size_]{};
 
-    for (int i = 0; i < size; ++i) {
-        array[i] = src.array[i];
-    }
+  for (int i = 0; i < size_; ++i) {
+    array_[i] = src.array_[i];
+  }
 }
 
-template <typename T>
+template<typename T>
 void Buff<T>::PushBack(T elem) {
-    if (size == container_size) {
-        container_size *= 2;
-        T* new_array = new T[container_size];
+  if (size_ == container_size_) {
+    container_size_ *= 2;
+    T *new_array = new T[container_size_];
 
-        for (size_t i = 0; i < size; ++i) {
-            new_array[i] = array[i];
-        }
-
-        delete[] array;
-        array = new_array;
+    for (size_t i = 0; i < size_; ++i) {
+      new_array[i] = array_[i];
     }
 
-    array[size++] = elem;
+    delete[] array_;
+    array_ = new_array;
+  }
+
+  array_[size_++] = elem;
 }

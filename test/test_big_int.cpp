@@ -52,7 +52,7 @@ TEST_CASE("UnaryOperators") {
             "1234567890123456789012345 -1245673456789345012389012\n-1234567890123456789012345 1245673456789345012389012\n");
 }
 
-TEST_CASE("RawSum") {
+/*TEST_CASE("RawSum") {
     std::ostringstream oss;
     BigInteger a("12345678");
     BigInteger b("98765432");
@@ -100,7 +100,7 @@ TEST_CASE("RawSubtract") {
     oss << c;
 
     REQUIRE(oss.str() == "7766 1000 1 0 -864197532 -863999532");
-}
+}*/
 
 TEST_CASE("Sum") {
     const std::string large(24, '9');
