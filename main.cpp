@@ -6,8 +6,5 @@
 #include <cppstring.h>
 
 int main() {
-  const String a;
-  const String b("caba");
 
-  std::cout << (a + b == "caba");
 }
