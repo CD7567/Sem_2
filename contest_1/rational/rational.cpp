@@ -18,7 +18,7 @@ int64_t GCD(int64_t lhs, int64_t rhs) {
 }
 
 // =================================================
-// Realization of class Rationalize
+// Realization of class Rational
 // =================================================
 
 Rational::Rational() : numerator_(0ll), denominator_(1ll) {
