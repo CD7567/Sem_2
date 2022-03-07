@@ -520,6 +520,7 @@ TEST_CASE("Comparisons") {
 
 TEST_CASE("Output") {
   auto oss = std::ostringstream();
+  std::cout << String(5, 'a') << std::endl;
   oss << String("abacaba") << ' ' << String() << ' ' << String(5, 'a');
   REQUIRE(oss.str() == "abacaba  aaaaa");
 }
