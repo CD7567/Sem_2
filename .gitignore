@@ -1,11 +1,2 @@
 # Project exclude paths
 /cmake-build-debug/
-/contest_1/array/array.zip
-/contest_1/bin_search/bin_search.zip
-/contest_1/cpp_string/cppstring.zip
-/contest_1/heap/heap.zip
-/contest_1/matrix/matrix.zip
-/contest_1/merge/merge.zip
-/contest_1/rational/rational.zip
-/contest_1/sort/sort.zip
-/contest_1/string_view/string_view.zip
