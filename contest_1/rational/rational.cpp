@@ -1,6 +1,4 @@
 #include "rational.h"
-#include <cctype>
-#include <cstring>
 
 int64_t GCD(int64_t lhs, int64_t rhs) {
   int64_t result;
@@ -22,6 +20,38 @@ int64_t GCD(int64_t lhs, int64_t rhs) {
 // =================================================
 // Realization of class Rationalize
 // =================================================
+
+Rational::Rational() : numerator_(0ll), denominator_(1ll) {
+}
+Rational::Rational(int64_t num) : numerator_(num), denominator_(1ll) {  // NOLINT
+}
+Rational::Rational(int64_t num, int64_t den) : numerator_(num), denominator_(den) {
+  if (denominator_ == 0) {
+    throw RationalDivisionByZero();
+  } else {
+    Rationalize();
+  }
+}
+
+int32_t Rational::GetNumerator() const {
+  return static_cast<int32_t>(numerator_);
+}
+int32_t Rational::GetDenominator() const {
+  return static_cast<int32_t>(denominator_);
+}
+
+void Rational::SetNumerator(const int64_t num) {
+  numerator_ = num;
+  Rationalize();
+}
+void Rational::SetDenominator(const int64_t den) {
+  if (den == 0) {
+    throw RationalDivisionByZero();
+  } else {
+    denominator_ = den;
+    Rationalize();
+  }
+}
 
 Rational operator+(const Rational& src) {
   return {src};
@@ -55,7 +85,7 @@ Rational operator+(const Rational& lhs, const Rational& rhs) {
   return {lhs.numerator_ * rhs.denominator_ + rhs.numerator_ * lhs.denominator_, lhs.denominator_ * rhs.denominator_};
 }
 Rational operator-(const Rational& lhs, const Rational& rhs) {
-  return lhs + (-rhs);
+  return {lhs.numerator_ * rhs.denominator_ - rhs.numerator_ * lhs.denominator_, lhs.denominator_ * rhs.denominator_};
 }
 Rational operator*(const Rational& lhs, const Rational& rhs) {
   return {lhs.numerator_ * rhs.numerator_, lhs.denominator_ * rhs.denominator_};
@@ -107,17 +137,13 @@ bool operator!=(const Rational& lhs, const Rational& rhs) {
   return !(lhs == rhs);
 }
 bool operator<(const Rational& lhs, const Rational& rhs) {
-  Rational help = lhs - rhs;
-
-  return help.numerator_ < 0;
+  return (lhs.numerator_ * rhs.denominator_ < rhs.numerator_ * lhs.denominator_);
 }
 bool operator<=(const Rational& lhs, const Rational& rhs) {
-  return (lhs < rhs) || (lhs == rhs);
+  return !(lhs > rhs);
 }
 bool operator>(const Rational& lhs, const Rational& rhs) {
-  Rational help = lhs - rhs;
-
-  return 0 < help.numerator_;
+  return (rhs < lhs);
 }
 bool operator>=(const Rational& lhs, const Rational& rhs) {
   return !(lhs < rhs);
@@ -146,7 +172,6 @@ std::istream& operator>>(std::istream& in, Rational& num) {
 
   return in;
 }
-
 std::ostream& operator<<(std::ostream& out, const Rational& num) {
   out << num.numerator_;
 

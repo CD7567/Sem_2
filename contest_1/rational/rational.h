@@ -12,38 +12,16 @@ class RationalDivisionByZero : public std::runtime_error {
 
 class Rational {
  public:
-  Rational() : numerator_(0ll), denominator_(1ll) {
-  }
-  Rational(int64_t num) : numerator_(num), denominator_(1ll) {  // NOLINT
-  }
-  Rational(int64_t num, int64_t den) : numerator_(num), denominator_(den) {
-    if (denominator_ == 0) {
-      throw RationalDivisionByZero();
-    } else {
-      Rationalize();
-    }
-  }
+  Rational();
+  Rational(int64_t num);  //  NOLINT
+  Rational(int64_t num, int64_t den);
   Rational(const Rational& src) = default;
 
-  int32_t GetNumerator() const {
-    return static_cast<int32_t>(numerator_);
-  }
-  int32_t GetDenominator() const {
-    return static_cast<int32_t>(denominator_);
-  }
+  [[nodiscard]] int32_t GetNumerator() const;
+  [[nodiscard]] int32_t GetDenominator() const;
 
-  void SetNumerator(const int64_t num) {
-    numerator_ = num;
-    Rationalize();
-  }
-  void SetDenominator(const int64_t den) {
-    if (den == 0) {
-      throw RationalDivisionByZero();
-    } else {
-      denominator_ = den;
-      Rationalize();
-    }
-  }
+  void SetNumerator(int64_t num);
+  void SetDenominator(int64_t den);
 
   friend Rational operator+(const Rational&);
   friend Rational operator-(const Rational&);

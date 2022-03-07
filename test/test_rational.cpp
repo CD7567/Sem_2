@@ -70,7 +70,6 @@ TEST_CASE("Binary") {
     Rational m(INT32_MAX, 2);
 
     RationalEqual(m * (m / m), INT32_MAX, 2);
-    std::cout << INT32_MAX << " " << m + m;
     RationalEqual(m + m, INT32_MAX, 1);
 
     RationalEqual(a + c, 1, 2);
