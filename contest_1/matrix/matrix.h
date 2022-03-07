@@ -16,15 +16,14 @@ public:
     }
 };
 
-template <typename T, size_t x, size_t y>
+template <typename T, size_t X, size_t Y>
 class Matrix {
 public:
-
     [[nodiscard]] size_t RowsNumber() const {
-        return x;
+        return X;
     }
     [[nodiscard]] size_t ColumnsNumber() const {
-        return y;
+        return Y;
     }
 
     T& operator()(size_t row, size_t col) {
@@ -33,34 +32,218 @@ public:
     T operator()(size_t row, size_t col) const {
         return matrix[row][col];
     }
-    T& At(size_t, size_t);
-    T At(size_t, size_t) const;
+    T& At(size_t row, size_t col) {
+      if ((row < 0) || (col < 0) || (row >= X) || (col >= Y)) {
+        throw MatrixOutOfRange();
+      } else {
+        return matrix[row][col];
+      }
+    }
+    T At(size_t row, size_t col) const {
+      if ((row < 0) || (col < 0) || (row >= X) || (col >= Y)) {
+        throw MatrixOutOfRange();
+      } else {
+        return matrix[row][col];
+      }
+    }
 
-    friend Matrix<T, x, y> operator+(const Matrix<T, x, y>&, const Matrix<T, x, y>&);
-    friend Matrix<T, x, y> operator-(const Matrix<T, x, y>&, const Matrix<T, x, y>&);
-    template<size_t z>
-    friend Matrix<T, x, z> operator*(const Matrix<T, x, y>&, const Matrix<T, y, z>&);
-    friend Matrix<T, x, y>& operator+=(Matrix<T, x, y>&, const Matrix<T, x, y>&);
-    friend Matrix<T, x, y>& operator-=(Matrix<T, x, y>&, const Matrix<T, x, y>&);
-    friend Matrix<T, x, y>& operator*=(Matrix<T, x, y>&, const Matrix<T, y, y>&);
+    Matrix<T, X, Y> operator+(const Matrix<T, X, Y>& other) {
+      Matrix<T, X, Y> result;
 
-    friend Matrix<T, x, y> operator*(const Matrix<T, x, y>&, const T&);
-    friend Matrix<T, x, y> operator/(const Matrix<T, x, y>&, const T&);
-    friend Matrix<T, x, y>& operator*=(Matrix<T, x, y>&, const T&);
-    friend Matrix<T, x, y>& operator/=(Matrix<T, x, y>&, const T&);
-    friend Matrix<T, x, y> operator*(const T&, const Matrix<T, x, y>&);
-    friend Matrix<T, x, y> operator/(const T&, const Matrix<T, x, y>&);
-    friend Matrix<T, x, y>& operator*=(const T&, Matrix<T, x, y>&);
-    friend Matrix<T, x, y>& operator/=(const T&, Matrix<T, x, y>&);
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          result.matrix[i][j] = matrix[i][j] + other.matrix[i][j];
+        }
+      }
 
-    friend bool operator==(const Matrix<T, x, y>&, const Matrix<T, x, y>&);
-    friend bool operator!=(const Matrix<T, x, y>&, const Matrix<T, x, y>&);
+      return result;
+    }
+    Matrix<T, X, Y> operator-(const Matrix<T, X, Y>& other) {
+      Matrix<T, X, Y> result;
 
-    friend std::istream& operator>>(std::istream&, Matrix<T, x, y>&);
-    friend std::ostream& operator<<(std::ostream&, const Matrix<T, x, y>&);
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          result.matrix[i][j] = matrix[i][j] - other.matrix[i][j];
+        }
+      }
 
-    T matrix[x][y];
+      return result;
+    }
+    template<size_t Z>
+    Matrix<T, X, Z> operator*(const Matrix<T, Y, Z>& other) {
+      Matrix<T, X, Z> result{};
+
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Z; ++j) {
+          for (size_t k = 0; k < Y; ++k) {
+            result.matrix[i][j] += matrix[i][k] * other.matrix[k][j];
+          }
+        }
+      }
+
+      return result;
+    }
+    Matrix<T, X, Y>& operator+=(const Matrix<T, X, Y>& other) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          matrix[i][j] += other.matrix[i][j];
+        }
+      }
+
+      return this;
+    }
+    Matrix<T, X, Y>& operator-=(const Matrix<T, X, Y>& other) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          matrix[i][j] -= other.matrix[i][j];
+        }
+      }
+
+      return this;
+    }
+    Matrix<T, X, Y>& operator*=(const Matrix<T, Y, Y>& other) {
+      T result[X][Y]{};
+
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          for (size_t k = 0; k < Y; ++k) {
+            result[i][j] += matrix[i][k] * other.matrix[k][j];
+          }
+        }
+      }
+
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          matrix[i][j] = result[i][j];
+        }
+      }
+
+      return this;
+    }
+
+    Matrix<T, X, Y> operator*(const T& num) {
+      Matrix<T, X, Y> result;
+
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          result.matrix[i][j] = matrix[i][j] * num;
+        }
+      }
+
+      return result;
+    }
+    Matrix<T, X, Y> operator/(const T& num) {
+      Matrix<T, X, Y> result;
+
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          result.matrix[i][j] = matrix[i][j] / num;
+        }
+      }
+
+      return result;
+    }
+    Matrix<T, X, Y>& operator*=(const T& num) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          matrix[i][j] *= num;
+        }
+      }
+
+      return this;
+    }
+    Matrix<T, X, Y>& operator/=(const T& num) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          matrix[i][j] /= num;
+        }
+      }
+
+      return this;
+    }
+    friend Matrix<T, X, Y> operator*(const T& num, const Matrix<T, X, Y>& operand) {
+      Matrix<T, X, Y> result;
+
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          result.matrix[i][j] = operand.matrix[i][j] * num;
+        }
+      }
+
+      return result;
+    }
+    friend Matrix<T, X, Y> operator/(const T& num, const Matrix<T, X, Y>& operand) {
+      Matrix<T, X, Y> result;
+
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          result.matrix[i][j] = operand.matrix[i][j] / num;
+        }
+      }
+
+      return result;
+    }
+    friend Matrix<T, X, Y>& operator*=(const T& num, Matrix<T, X, Y>& operand) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          operand.matrix[i][j] *= num;
+        }
+      }
+
+      return operand;
+    }
+    friend Matrix<T, X, Y>& operator/=(const T& num, Matrix<T, X, Y>& operand) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          operand.matrix[i][j] /= num;
+        }
+      }
+
+      return operand;
+    }
+
+    bool operator==(const Matrix<T, X, Y>& other) {
+      bool equals = true;
+
+      for (size_t i = 0; (i < X) && equals; ++i) {
+        for (size_t j = 0; (j < Y) && equals; ++j) {
+          equals &= (matrix[i][j] == other.matrix[i][j]);
+        }
+      }
+
+      return equals;
+    }
+    bool operator!=(const Matrix<T, X, Y>& other) {
+      return !(this == other);
+    }
+
+    friend std::istream& operator>>(std::istream& in, Matrix<T, X, Y>& operand) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          in >> operand.matrix[i][j];
+        }
+      }
+    }
+    friend std::ostream& operator<<(std::ostream& out, const Matrix<T, X, Y>& operand) {
+      for (size_t i = 0; i < X; ++i) {
+        for (size_t j = 0; j < Y; ++j) {
+          out << operand.matrix[i][j];
+        }
+      }
+    }
+
+    T matrix[X][Y];
 };
 
-template <typename T, size_t x, size_t y>
-Matrix<T, y, x> GetTransposed(const Matrix<T, x, y>&);
+template <typename T, size_t X, size_t Y>
+Matrix<T, Y, X> GetTransposed(const Matrix<T, X, Y>& matrix) {
+  Matrix<T, Y, X> transposed;
+
+  for (size_t i = 0; i < X; ++i) {
+    for (size_t j = 0; j < Y; ++j) {
+      transposed.matrix[j][i] = matrix[i][j];
+    }
+  }
+
+  return transposed;
+}

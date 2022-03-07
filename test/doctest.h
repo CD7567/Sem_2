@@ -101,7 +101,7 @@
 // =================================================================================================
 
 #if DOCTEST_CLANG
-#define DOCTEST_PRAGMA_TO_STR(x) _Pragma(#x)
+#define DOCTEST_PRAGMA_TO_STR(X) _Pragma(#X)
 #define DOCTEST_CLANG_SUPPRESS_WARNING_PUSH _Pragma("clang diagnostic push")
 #define DOCTEST_CLANG_SUPPRESS_WARNING(w) DOCTEST_PRAGMA_TO_STR(clang diagnostic ignored w)
 #define DOCTEST_CLANG_SUPPRESS_WARNING_POP _Pragma("clang diagnostic pop")
@@ -321,11 +321,11 @@ DOCTEST_MSVC_SUPPRESS_WARNING(4623) // default constructor was implicitly define
 #if DOCTEST_MSVC
 #define DOCTEST_NOINLINE __declspec(noinline)
 #define DOCTEST_UNUSED
-#define DOCTEST_ALIGNMENT(x)
+#define DOCTEST_ALIGNMENT(X)
 #elif DOCTEST_CLANG && DOCTEST_CLANG < DOCTEST_COMPILER(3, 5, 0)
 #define DOCTEST_NOINLINE
 #define DOCTEST_UNUSED
-#define DOCTEST_ALIGNMENT(x)
+#define DOCTEST_ALIGNMENT(X)
 #else
 #define DOCTEST_NOINLINE __attribute__((noinline))
 #define DOCTEST_UNUSED __attribute__((unused))
@@ -366,13 +366,13 @@ DOCTEST_MSVC_SUPPRESS_WARNING(4623) // default constructor was implicitly define
 #ifdef __COUNTER__ // not standard and may be missing for some compilers
 #define DOCTEST_ANONYMOUS(x) DOCTEST_CAT(x, __COUNTER__)
 #else // __COUNTER__
-#define DOCTEST_ANONYMOUS(x) DOCTEST_CAT(x, __LINE__)
+#define DOCTEST_ANONYMOUS(X) DOCTEST_CAT(X, __LINE__)
 #endif // __COUNTER__
 
 #ifndef DOCTEST_CONFIG_ASSERTION_PARAMETERS_BY_VALUE
 #define DOCTEST_REF_WRAP(x) x&
 #else // DOCTEST_CONFIG_ASSERTION_PARAMETERS_BY_VALUE
-#define DOCTEST_REF_WRAP(x) x
+#define DOCTEST_REF_WRAP(X) X
 #endif // DOCTEST_CONFIG_ASSERTION_PARAMETERS_BY_VALUE
 
 // not using __APPLE__ because... this is how Catch does it
@@ -799,7 +799,7 @@ namespace doctest {
         bool force_colors;         // forces the use of colors even when a tty cannot be detected
         bool no_breaks;            // to not break into the debugger
         bool no_skip;              // don't skip test cases which are marked to be skipped
-        bool gnu_file_line;        // if line numbers should be surrounded with :x: and not (x):
+        bool gnu_file_line;        // if line numbers should be surrounded with :X: and not (X):
         bool no_path_in_filenames; // if the path to files should be removed from the output
         bool no_line_numbers;      // if source code line numbers should be omitted from the output
         bool no_debug_output;      // no output in the debug console when a debugger is attached
@@ -1957,7 +1957,7 @@ int registerExceptionTranslator(String (*)(T)) {
     return !b.m_failed
 
 #ifdef DOCTEST_CONFIG_NO_TRY_CATCH_IN_ASSERTS
-#define DOCTEST_WRAP_IN_TRY(x) x;
+#define DOCTEST_WRAP_IN_TRY(X) X;
 #else // DOCTEST_CONFIG_NO_TRY_CATCH_IN_ASSERTS
 #define DOCTEST_WRAP_IN_TRY(x)                                                                     \
     try {                                                                                          \
@@ -2497,8 +2497,8 @@ int registerExceptionTranslator(String (*)(T)) {
     DOCTEST_CREATE_AND_REGISTER_FUNCTION(DOCTEST_ANONYMOUS(DOCTEST_ANON_FUNC_), name)
 
 // for registering tests with a fixture
-#define DOCTEST_TEST_CASE_FIXTURE(x, name)                                                         \
-    DOCTEST_IMPLEMENT_FIXTURE(DOCTEST_ANONYMOUS(DOCTEST_ANON_CLASS_), x,                           \
+#define DOCTEST_TEST_CASE_FIXTURE(X, name)                                                         \
+    DOCTEST_IMPLEMENT_FIXTURE(DOCTEST_ANONYMOUS(DOCTEST_ANON_CLASS_), X,                           \
                               DOCTEST_ANONYMOUS(DOCTEST_ANON_FUNC_), name)
 
 // for converting types to strings without the <typeinfo> header and demangling
@@ -2537,7 +2537,7 @@ int registerExceptionTranslator(String (*)(T)) {
 #define DOCTEST_REGISTER_LISTENER(name, priority, reporter)
 
 #define DOCTEST_INFO(...) (static_cast<void>(0))
-#define DOCTEST_CAPTURE(x) (static_cast<void>(0))
+#define DOCTEST_CAPTURE(X) (static_cast<void>(0))
 #define DOCTEST_ADD_MESSAGE_AT(file, line, ...) (static_cast<void>(0))
 #define DOCTEST_ADD_FAIL_CHECK_AT(file, line, ...) (static_cast<void>(0))
 #define DOCTEST_ADD_FAIL_AT(file, line, ...) (static_cast<void>(0))
@@ -2950,7 +2950,7 @@ DOCTEST_GCC_SUPPRESS_WARNING("-Wmultiple-inheritance")
 DOCTEST_GCC_SUPPRESS_WARNING("-Wsuggest-attribute")
 
 DOCTEST_MSVC_SUPPRESS_WARNING_PUSH
-DOCTEST_MSVC_SUPPRESS_WARNING(4267) // 'var' : conversion from 'x' to 'y', possible loss of data
+DOCTEST_MSVC_SUPPRESS_WARNING(4267) // 'var' : conversion from 'X' to 'Y', possible loss of data
 DOCTEST_MSVC_SUPPRESS_WARNING(4530) // C++ exception handler used, but unwind semantics not enabled
 DOCTEST_MSVC_SUPPRESS_WARNING(4577) // 'noexcept' used with no exception handling mode specified
 DOCTEST_MSVC_SUPPRESS_WARNING(4774) // format string expected in argument is not a string literal
@@ -3603,7 +3603,7 @@ namespace Color {
 
 // clang-format off
 const char* assertString(assertType::Enum at) {
-    DOCTEST_MSVC_SUPPRESS_WARNING_WITH_PUSH(4062) // enum 'x' in switch of enum 'y' is not handled
+    DOCTEST_MSVC_SUPPRESS_WARNING_WITH_PUSH(4062) // enum 'X' in switch of enum 'Y' is not handled
     switch(at) {  //!OCLINT missing default in switch statements
         case assertType::DT_WARN                    : return "WARN";
         case assertType::DT_CHECK                   : return "CHECK";
@@ -4908,7 +4908,7 @@ namespace {
 
     void hexEscapeChar(std::ostream& os, unsigned char c) {
         std::ios_base::fmtflags f(os.flags());
-        os << "\\x"
+        os << "\\X"
             << std::uppercase << std::hex << std::setfill('0') << std::setw(2)
             << static_cast<int>(c);
         os.flags(f);

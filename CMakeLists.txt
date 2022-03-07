@@ -10,12 +10,10 @@ add_executable(TestsRunBigInt test/test_big_int.cpp)
 add_executable(TestsRunString test/test_string.cpp)
 
 add_library(Rational contest_1/rational/rational.h contest_1/rational/rational.cpp)
-add_library(Matrix contest_1/matrix/matrix.h contest_1/matrix/matrix.cpp)
 add_library(BigInt contest_1/big_int/big_int.h contest_1/big_int/big_int.cpp)
 add_library(String contest_1/cpp_string/cppstring.h contest_1/cpp_string/cppstring.cpp)
 
 target_link_libraries(TestsRunRational PUBLIC Rational)
-target_link_libraries(TestsRunMatrix PUBLIC Matrix)
 target_link_libraries(TestsRunBigInt PUBLIC BigInt)
 target_link_libraries(TestsRunString PUBLIC String)
 target_link_libraries(Sem_2 PUBLIC String)
