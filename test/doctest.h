@@ -4272,7 +4272,7 @@ namespace detail {
     bool isDebuggerActive() {
         int        mib[4];
         kinfo_proc info;
-        size_t     size;
+        size_t     size_;
         // Initialize the flags so that, if sysctl fails for some bizarre
         // reason, we get a predictable result.
         info.kp_proc.p_flag = 0;
@@ -4283,8 +4283,8 @@ namespace detail {
         mib[2] = KERN_PROC_PID;
         mib[3] = getpid();
         // Call sysctl.
-        size = sizeof(info);
-        if(sysctl(mib, DOCTEST_COUNTOF(mib), &info, &size, 0, 0) != 0) {
+        size_ = sizeof(info);
+        if(sysctl(mib, DOCTEST_COUNTOF(mib), &info, &size_, 0, 0) != 0) {
             std::cerr << "\nCall to sysctl failed - unable to determine if debugger is active **\n";
             return false;
         }
@@ -4434,7 +4434,7 @@ namespace {
             guaranteeSize = 32 * 1024;
             // Register an unhandled exception filter
             previousTop = SetUnhandledExceptionFilter(handleException);
-            // Pass in guarantee size to be filled
+            // Pass in guarantee size_ to be filled
             SetThreadStackGuarantee(&guaranteeSize);
 
             // On Windows uncaught exceptions from another thread, exceptions from
@@ -4635,7 +4635,7 @@ namespace {
 
         DOCTEST_ITERATE_THROUGH_REPORTERS(test_case_exception, {message.c_str(), true});
 
-        while(g_cs->subcasesStack.size()) {
+        while(g_cs->subcasesStack.size_()) {
             g_cs->subcasesStack.pop_back();
             DOCTEST_ITERATE_THROUGH_REPORTERS(subcase_end, DOCTEST_EMPTY);
         }
