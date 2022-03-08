@@ -2,28 +2,40 @@
 
 #include <iostream>
 #include <cstdint>
+#include <stdexcept>
+
+class BigIntegerOverflow : public std::runtime_error {
+ public:
+  BigIntegerOverflow() : std::runtime_error("BigIntegerOverflow") {
+  }
+};
+
+class BigIntegerDivisionByZero : public std::runtime_error {
+ public:
+  BigIntegerDivisionByZero() : std::runtime_error("BigIntegerDivisionByZero") {
+  }
+};
 
 class BigInteger {
  public:
   BigInteger() = default;
-
   explicit BigInteger(const char*);
-
   BigInteger(long long); // NOLINT
   BigInteger(const BigInteger&);
 
   BigInteger& operator=(const BigInteger&) = default;
 
   friend BigInteger operator+(const BigInteger&);
-
   friend BigInteger operator-(const BigInteger&);
 
   friend BigInteger operator+(const BigInteger&, const BigInteger&);
-
   friend BigInteger operator-(const BigInteger&, const BigInteger&);
+  friend BigInteger operator*(const BigInteger&, const BigInteger&);
+  friend BigInteger& operator+=(BigInteger&, const BigInteger&);
+  friend BigInteger& operator-=(BigInteger&, const BigInteger&);
+  friend BigInteger& operator*=(BigInteger&, const BigInteger&);
 
   friend std::istream& operator>>(std::istream& in, BigInteger&);
-
   friend std::ostream& operator<<(std::ostream& out, const BigInteger& num);
 
   friend bool operator==(const BigInteger& lhs, const BigInteger& rhs);
@@ -111,6 +123,10 @@ class BigInteger {
         new_array[i] = array_[i];
       }
 
+      for (size_t i = upper_bound; i < new_size; ++i) {
+        new_array[i] = 0;
+      }
+
       delete[] array_;
       array_ = new_array;
       size_ = new_size;
@@ -128,13 +144,12 @@ class BigInteger {
   const static size_t kBaseDecLen = 4;
 
   bool is_negative_ = false;
-  Buffer<int32_t> buffer_ = Buffer<int32_t>(2);
+  Buffer <int32_t> buffer_ = Buffer <int32_t>(2);
 
   void Normalize();
-
   void CheckSign();
 
   static void RawSum(const BigInteger&, const BigInteger&, BigInteger&);
-
   static void RawSubtract(const BigInteger&, const BigInteger&, BigInteger&);
+  static void RawMultiply(const BigInteger&, const BigInteger&, BigInteger&);
 };

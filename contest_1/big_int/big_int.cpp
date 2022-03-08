@@ -8,11 +8,11 @@
 // Realization of BigInteger class
 // ===========================================================
 
-BigInteger::BigInteger(const char *src) {
+BigInteger::BigInteger(const char* src) {
   bool is_src_negative = (src[0] == '-');
   bool has_sign = !std::isdigit(src[0]);
   size_t dec_length = strlen(src);
-  char *unit = new char[kBaseDecLen];
+  char* unit = new char[kBaseDecLen];
   is_negative_ = is_src_negative;
 
   size_t i;
@@ -53,22 +53,22 @@ BigInteger::BigInteger(long long src) {
     }
   }
 }
-BigInteger::BigInteger(const BigInteger &src) {
+BigInteger::BigInteger(const BigInteger& src) {
   is_negative_ = src.is_negative_;
   buffer_ = Buffer(src.buffer_);
 }
 
-BigInteger operator+(const BigInteger &rhs) {
+BigInteger operator+(const BigInteger& rhs) {
   return rhs;
 }
-BigInteger operator-(const BigInteger &rhs) {
+BigInteger operator-(const BigInteger& rhs) {
   BigInteger copy = rhs;
   copy.Invert();
 
   return copy;
 }
 
-BigInteger operator+(const BigInteger &lhs, const BigInteger &rhs) {
+BigInteger operator+(const BigInteger& lhs, const BigInteger& rhs) {
   BigInteger res;
 
   if (lhs.is_negative_) {
@@ -90,7 +90,7 @@ BigInteger operator+(const BigInteger &lhs, const BigInteger &rhs) {
   res.CheckSign();
   return res;
 }
-BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs) {
+BigInteger operator-(const BigInteger& lhs, const BigInteger& rhs) {
   BigInteger res;
 
   if (lhs.is_negative_) {
@@ -112,8 +112,41 @@ BigInteger operator-(const BigInteger &lhs, const BigInteger &rhs) {
   res.CheckSign();
   return res;
 }
+BigInteger operator*(const BigInteger& lhs, const BigInteger& rhs) {
+  BigInteger result;
 
-bool operator==(const BigInteger &lhs, const BigInteger &rhs) {
+  if (lhs.buffer_.GetSize() + rhs.buffer_.GetSize() > 7500) {
+    throw BigIntegerOverflow();
+  } else {
+    BigInteger::RawMultiply(lhs, rhs, result);
+    result.is_negative_ = lhs.is_negative_ xor rhs.is_negative_;
+  }
+
+  return result;
+}
+
+BigInteger& operator+=(BigInteger& lhs, const BigInteger& rhs) {
+  if (lhs.is_negative_) {
+    if (rhs.is_negative_) {
+      BigInteger::RawSum(lhs, rhs, lhs);
+      res.is_negative_ = true;
+    } else {
+      BigInteger::RawSubtract(lhs, rhs, res);
+      res.is_negative_ = !res.is_negative_;
+    }
+  } else {
+    if (rhs.is_negative_) {
+      BigInteger::RawSubtract(lhs, rhs, res);
+    } else {
+      BigInteger::RawSum(lhs, rhs, res);
+    }
+  }
+
+  res.CheckSign();
+  return res;
+}
+
+bool operator==(const BigInteger& lhs, const BigInteger& rhs) {
   bool equals = true;
 
   if ((lhs.buffer_.GetSize() == rhs.buffer_.GetSize()) && (lhs.is_negative_ == rhs.is_negative_)) {
@@ -129,7 +162,7 @@ bool operator==(const BigInteger &lhs, const BigInteger &rhs) {
   return equals;
 }
 
-std::istream &operator>>(std::istream &in, BigInteger &num) {
+std::istream& operator>>(std::istream& in, BigInteger& num) {
   char src[30005];
   in >> src;
 
@@ -137,11 +170,11 @@ std::istream &operator>>(std::istream &in, BigInteger &num) {
 
   return in;
 }
-std::ostream &operator<<(std::ostream &out, const BigInteger &num) {
-  const int32_t *first_unit_ptr = num.buffer_.Begin();
+std::ostream& operator<<(std::ostream& out, const BigInteger& num) {
+  const int32_t* first_unit_ptr = num.buffer_.Begin();
 
   out << (num.is_negative_ ? "-" : "") << *(num.buffer_.End() - 1);
-  for (const int32_t *i = num.buffer_.End() - 2; i >= first_unit_ptr; --i) {
+  for (const int32_t* i = num.buffer_.End() - 2; i >= first_unit_ptr; --i) {
     int32_t unit = *i;
     out << (unit / 1000);
     unit %= 1000;
@@ -155,7 +188,7 @@ std::ostream &operator<<(std::ostream &out, const BigInteger &num) {
   return out;
 }
 
-void BigInteger::Info(BigInteger &num) {
+void BigInteger::Info(BigInteger& num) {
   std::cout << "--------" << std::endl;
   std::cout << "Stored: " << num.buffer_.GetSize() << std::endl;
   std::cout << "Container: " << num.buffer_.GetContainerSize() << std::endl;
@@ -167,8 +200,28 @@ void BigInteger::Info(BigInteger &num) {
 
   std::cout << std::endl << "--------" << std::endl;
 }
+void BigInteger::Normalize() {
+  size_t size = buffer_.GetSize();
 
-void BigInteger::RawSum(const BigInteger &lhs, const BigInteger &rhs, BigInteger &res) {
+  for (size_t i = 0; i < size - 1; ++i) {
+    if (buffer_[i] >= kBase) {
+      buffer_[i + 1] += buffer_[i] / kBase;
+      buffer_[i] %= kBase;
+    }
+  }
+
+  if (buffer_[size - 1] >= kBase) {
+    buffer_.PushBack(buffer_[size - 1] / kBase);
+    buffer_[size - 1] %= kBase;
+  }
+}
+void BigInteger::CheckSign() {
+  if ((buffer_.GetSize() == 1) && (buffer_[0] == 0)) {
+    is_negative_ = false;
+  }
+}
+
+void BigInteger::RawSum(const BigInteger& lhs, const BigInteger& rhs, BigInteger& res) {
   size_t sum_bound = std::min(lhs.buffer_.GetSize(), rhs.buffer_.GetSize());
 
   res.buffer_.Resize(std::max(lhs.buffer_.GetSize(), rhs.buffer_.GetSize()));
@@ -187,7 +240,7 @@ void BigInteger::RawSum(const BigInteger &lhs, const BigInteger &rhs, BigInteger
 
   res.Normalize();
 }
-void BigInteger::RawSubtract(const BigInteger &lhs, const BigInteger &rhs, BigInteger &res) {
+void BigInteger::RawSubtract(const BigInteger& lhs, const BigInteger& rhs, BigInteger& res) {
   size_t l_size = lhs.buffer_.GetSize();
   size_t r_size = rhs.buffer_.GetSize();
   size_t subtraction_bound = std::min(l_size, r_size);
@@ -231,26 +284,33 @@ void BigInteger::RawSubtract(const BigInteger &lhs, const BigInteger &rhs, BigIn
 
   res.buffer_.SetSize(end_size);
 }
+void BigInteger::RawMultiply(const BigInteger& lhs, const BigInteger& rhs, BigInteger& res) {
+  size_t lhs_size = lhs.buffer_.GetSize();
+  size_t rhs_size = lhs.buffer_.GetSize();
+  size_t new_size = lhs_size + rhs_size;
 
-void BigInteger::Normalize() {
-  size_t size = buffer_.GetSize();
+  res.buffer_.Resize(new_size);
 
-  for (size_t i = 0; i < size - 1; ++i) {
-    if (buffer_[i] >= kBase) {
-      buffer_[i + 1] += buffer_[i] / kBase;
-      buffer_[i] %= kBase;
+  int32_t shift;
+
+  for (size_t i = 0; i < rhs_size; ++i) {
+    shift = 0;
+
+    for (size_t j = 0; j < lhs_size; ++j) {
+      res.buffer_[i + j] += shift + lhs.buffer_[j] * rhs.buffer_[i];
+      shift = res.buffer_[i + j] / kBase;
+      res.buffer_[i + j] %= kBase;
     }
+
+    res.buffer_[i + lhs_size] = shift;
   }
 
-  if (buffer_[size - 1] >= kBase) {
-    buffer_.PushBack(buffer_[size - 1] / kBase);
-    buffer_[size - 1] %= kBase;
+  size_t end_size;
+
+  for (end_size = new_size; (end_size > 1) && (res.buffer_[end_size - 1] == 0); --end_size) {
   }
-}
-void BigInteger::CheckSign() {
-  if ((buffer_.GetSize() == 1) && (buffer_[0] == 0)) {
-    is_negative_ = false;
-  }
+
+  res.buffer_.SetSize(end_size);
 }
 
 // ===========================================================
@@ -259,14 +319,14 @@ void BigInteger::CheckSign() {
 
 #define Buff BigInteger::Buffer
 
-template<typename T>
-Buff<T>::Buffer(size_t beg_size) {
+template <typename T>
+Buff <T>::Buffer(size_t beg_size) {
   array_ = new T[beg_size]{};
   container_size_ = beg_size;
 }
 
-template<typename T>
-Buff<T>::Buffer(const Buffer<T> &src) {
+template <typename T>
+Buff <T>::Buffer(const Buffer <T>& src) {
   size_ = src.size_;
   container_size_ = src.container_size_;
   array_ = new T[container_size_]{};
@@ -276,11 +336,11 @@ Buff<T>::Buffer(const Buffer<T> &src) {
   }
 }
 
-template<typename T>
-void Buff<T>::PushBack(T elem) {
+template <typename T>
+void Buff <T>::PushBack(T elem) {
   if (size_ == container_size_) {
     container_size_ *= 2;
-    T *new_array = new T[container_size_];
+    T* new_array = new T[container_size_];
 
     for (size_t i = 0; i < size_; ++i) {
       new_array[i] = array_[i];
