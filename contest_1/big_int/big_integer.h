@@ -55,8 +55,7 @@ class BigInteger {
     return (buffer_.GetSize() > 1) || (buffer_[0] != 0);
   }
 
-  [[nodiscard]]
-  bool IsNegative() const;
+  [[nodiscard]] bool IsNegative() const;
 
   template <typename T>
   class Buffer {
@@ -80,14 +79,16 @@ class BigInteger {
     const T& operator[](size_t idx) const;
 
     Buffer& operator=(const Buffer& src) {
-      delete[] array_;
-      size_ = src.size_;
-      container_size_ = src.container_size_;
+      if (&src != this) {
+        delete[] array_;
+        size_ = src.size_;
+        container_size_ = src.container_size_;
 
-      array_ = new T[container_size_];
+        array_ = new T[container_size_];
 
-      for (int i = 0; i < size_; ++i) {
-        array_[i] = src.array_[i];
+        for (size_t i = 0; i < size_; ++i) {
+          array_[i] = src.array_[i];
+        }
       }
 
       return *this;

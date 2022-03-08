@@ -1,4 +1,4 @@
-#include "big_int.h"
+#include "big_integer.h"
 
 #include <cstring>
 #include <cctype>
@@ -17,7 +17,7 @@ BigInteger::BigInteger(const char* src) {
   bool is_src_negative = (src[0] == '-');
   bool has_sign = !std::isdigit(src[0]);
   size_t dec_length = strlen(src);
-  auto unit = new char[kBaseDecLen];
+  auto unit = new char[kBaseDecLen + 1]{};
   is_negative_ = is_src_negative;
 
   size_t i;
@@ -417,9 +417,9 @@ void BigInteger::RawMultiply(const BigInteger& lhs, const BigInteger& rhs, BigIn
   res.buffer_.SetSize(end_size);
 }
 
-// ===========================================================
-// Realization of Buffer class
-// ===========================================================
+  // ===========================================================
+  // Realization of Buffer class
+  // ===========================================================
 
 #define Buff BigInteger::Buffer
 
@@ -435,7 +435,7 @@ Buff<T>::Buffer(const Buffer<T>& src) {
   container_size_ = src.container_size_;
   array_ = new T[container_size_]{};
 
-  for (int i = 0; i < size_; ++i) {
+  for (size_t i = 0; i < size_; ++i) {
     array_[i] = src.array_[i];
   }
 }

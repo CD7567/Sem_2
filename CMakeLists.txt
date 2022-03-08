@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.21)
 project(Sem_2)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+
 
 add_executable(Sem_2 main.cpp)
 add_executable(TestsRunRational test/test_rational.cpp)
@@ -11,7 +13,7 @@ add_executable(TestsRunString test/test_string.cpp)
 add_executable(TestsRunStringView test/test_string_view.cpp)
 
 add_library(Rational contest_1/rational/rational.h contest_1/rational/rational.cpp)
-add_library(BigInt contest_1/big_int/big_int.h contest_1/big_int/big_int.cpp)
+add_library(BigInt contest_1/big_int/big_integer.h contest_1/big_int/big_integer.cpp)
 add_library(String contest_1/cpp_string/cppstring.h contest_1/cpp_string/cppstring.cpp)
 
 target_link_libraries(TestsRunRational PUBLIC Rational)

@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-#include <big_int.h>
-#include <big_int.h>  // check include guards
+#include <big_integer.h>
+#include <big_integer.h>  // check include guards
 
 TEST_CASE("Constructors") {
   std::ostringstream oss;
