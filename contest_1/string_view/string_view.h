@@ -15,8 +15,7 @@ class StringView {
   }
   StringView(const char* cstr) : str_(cstr), size_(StrLen(cstr)) {  //  NOLINT
   }
-  StringView(const char* cstr, size_t size) : str_(cstr), size_(size) {
-  }
+  StringView(const char* cstr, size_t size) : str_(cstr), size_(size) {}
 
   [[nodiscard]] const char& At(size_t idx) const {
     if (idx >= size_) {
