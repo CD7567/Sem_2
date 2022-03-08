@@ -4,6 +4,11 @@
 #include <cctype>
 #include <iostream>
 
+template <typename T>
+bool Min(const T& lhs, const T& rhs) {
+  return ((lhs < rhs) ? lhs : rhs);
+}
+
 // ===========================================================
 // Realization of BigInteger class
 // ===========================================================
@@ -12,7 +17,7 @@ BigInteger::BigInteger(const char* src) {
   bool is_src_negative = (src[0] == '-');
   bool has_sign = !std::isdigit(src[0]);
   size_t dec_length = strlen(src);
-  char* unit = new char[kBaseDecLen];
+  auto unit = new char[kBaseDecLen];
   is_negative_ = is_src_negative;
 
   size_t i;
@@ -38,7 +43,22 @@ BigInteger::BigInteger(const char* src) {
   buffer_.PushBack(std::stoi(unit));
   delete[] unit;
 }
-BigInteger::BigInteger(long long src) {
+BigInteger::BigInteger(int32_t src) {
+  if (src < 0) {
+    is_negative_ = true;
+    src = -src;
+  }
+
+  if (src == 0) {
+    buffer_.PushBack(0);
+  } else {
+    while (src > 0) {
+      buffer_.PushBack(static_cast<int32_t>(src % kBase));
+      src /= kBase;
+    }
+  }
+}
+BigInteger::BigInteger(int64_t src) {
   if (src < 0) {
     is_negative_ = true;
     src = -src;
@@ -63,9 +83,28 @@ BigInteger operator+(const BigInteger& rhs) {
 }
 BigInteger operator-(const BigInteger& rhs) {
   BigInteger copy = rhs;
-  copy.Invert();
+  copy.is_negative_ = !copy.is_negative_;
 
   return copy;
+}
+
+BigInteger& operator++(BigInteger& src) {
+  src += 1;
+  return src;
+}
+BigInteger& operator--(BigInteger& src) {
+  src -= 1;
+  return src;
+}
+BigInteger operator++(BigInteger& src, int) {
+  BigInteger src_clone(src);
+  ++src;
+  return src_clone;
+}
+BigInteger operator--(BigInteger& src, int) {
+  BigInteger src_clone(src);
+  --src;
+  return src_clone;
 }
 
 BigInteger operator+(const BigInteger& lhs, const BigInteger& rhs) {
@@ -122,28 +161,56 @@ BigInteger operator*(const BigInteger& lhs, const BigInteger& rhs) {
     result.is_negative_ = lhs.is_negative_ xor rhs.is_negative_;
   }
 
+  result.CheckSign();
   return result;
 }
-
 BigInteger& operator+=(BigInteger& lhs, const BigInteger& rhs) {
   if (lhs.is_negative_) {
     if (rhs.is_negative_) {
       BigInteger::RawSum(lhs, rhs, lhs);
-      res.is_negative_ = true;
+      lhs.is_negative_ = true;
     } else {
-      BigInteger::RawSubtract(lhs, rhs, res);
-      res.is_negative_ = !res.is_negative_;
+      BigInteger::RawSubtract(lhs, rhs, lhs);
+      lhs.is_negative_ = !lhs.is_negative_;
     }
   } else {
     if (rhs.is_negative_) {
-      BigInteger::RawSubtract(lhs, rhs, res);
+      BigInteger::RawSubtract(lhs, rhs, lhs);
     } else {
-      BigInteger::RawSum(lhs, rhs, res);
+      BigInteger::RawSum(lhs, rhs, lhs);
     }
   }
 
-  res.CheckSign();
-  return res;
+  lhs.CheckSign();
+  return lhs;
+}
+BigInteger& operator-=(BigInteger& lhs, const BigInteger& rhs) {
+  if (lhs.is_negative_) {
+    if (rhs.is_negative_) {
+      BigInteger::RawSubtract(lhs, rhs, lhs);
+      lhs.is_negative_ = !lhs.is_negative_;
+    } else {
+      BigInteger::RawSum(lhs, rhs, lhs);
+      lhs.is_negative_ = true;
+    }
+  } else {
+    if (rhs.is_negative_) {
+      BigInteger::RawSum(lhs, rhs, lhs);
+    } else {
+      BigInteger::RawSubtract(lhs, rhs, lhs);
+    }
+  }
+
+  lhs.CheckSign();
+  return lhs;
+}
+BigInteger& operator*=(BigInteger& lhs, const BigInteger& rhs) {
+  BigInteger result = lhs * rhs;
+
+  lhs = result;
+
+  lhs.CheckSign();
+  return lhs;
 }
 
 bool operator==(const BigInteger& lhs, const BigInteger& rhs) {
@@ -160,6 +227,51 @@ bool operator==(const BigInteger& lhs, const BigInteger& rhs) {
   }
 
   return equals;
+}
+bool operator!=(const BigInteger& lhs, const BigInteger& rhs) {
+  return !(lhs == rhs);
+}
+bool operator<(const BigInteger& lhs, const BigInteger& rhs) {
+  size_t lhs_size = lhs.buffer_.GetSize();
+  size_t rhs_size = rhs.buffer_.GetSize();
+  size_t upper_bound = Min(rhs_size, lhs_size);
+  bool result = false;
+
+  if (lhs.IsNegative() != rhs.IsNegative()) {
+    result = lhs.IsNegative();
+  } else if (lhs_size != rhs_size) {
+    result = (lhs_size < rhs_size);
+  } else {
+    for (size_t i = upper_bound; i > 0 && !result; --i) {
+      result = lhs.buffer_[i - 1] < rhs.buffer_[i - 1];
+    }
+  }
+
+  return result;
+}
+bool operator>(const BigInteger& lhs, const BigInteger& rhs) {
+  size_t lhs_size = lhs.buffer_.GetSize();
+  size_t rhs_size = rhs.buffer_.GetSize();
+  size_t upper_bound = Min(rhs_size, lhs_size);
+  bool result = false;
+
+  if (lhs.IsNegative() != rhs.IsNegative()) {
+    result = !lhs.IsNegative();
+  } else if (lhs_size != rhs_size) {
+    result = (lhs_size > rhs_size);
+  } else {
+    for (size_t i = upper_bound; i > 0 && !result; --i) {
+      result = lhs.buffer_[i - 1] > rhs.buffer_[i - 1];
+    }
+  }
+
+  return result;
+}
+bool operator<=(const BigInteger& lhs, const BigInteger& rhs) {
+  return !(lhs > rhs);
+}
+bool operator>=(const BigInteger& lhs, const BigInteger& rhs) {
+  return !(lhs < rhs);
 }
 
 std::istream& operator>>(std::istream& in, BigInteger& num) {
@@ -188,18 +300,10 @@ std::ostream& operator<<(std::ostream& out, const BigInteger& num) {
   return out;
 }
 
-void BigInteger::Info(BigInteger& num) {
-  std::cout << "--------" << std::endl;
-  std::cout << "Stored: " << num.buffer_.GetSize() << std::endl;
-  std::cout << "Container: " << num.buffer_.GetContainerSize() << std::endl;
-  std::cout << "Number: " << (num.is_negative_ ? "-" : "") << "|";
-
-  for (size_t i = num.buffer_.GetSize(); i > 0; --i) {
-    std::cout << num.buffer_[i - 1] << "|";
-  }
-
-  std::cout << std::endl << "--------" << std::endl;
+bool BigInteger::IsNegative() const {
+  return is_negative_;
 }
+
 void BigInteger::Normalize() {
   size_t size = buffer_.GetSize();
 
@@ -320,13 +424,13 @@ void BigInteger::RawMultiply(const BigInteger& lhs, const BigInteger& rhs, BigIn
 #define Buff BigInteger::Buffer
 
 template <typename T>
-Buff <T>::Buffer(size_t beg_size) {
+Buff<T>::Buffer(size_t beg_size) {
   array_ = new T[beg_size]{};
   container_size_ = beg_size;
 }
 
 template <typename T>
-Buff <T>::Buffer(const Buffer <T>& src) {
+Buff<T>::Buffer(const Buffer<T>& src) {
   size_ = src.size_;
   container_size_ = src.container_size_;
   array_ = new T[container_size_]{};
@@ -337,10 +441,82 @@ Buff <T>::Buffer(const Buffer <T>& src) {
 }
 
 template <typename T>
-void Buff <T>::PushBack(T elem) {
+Buff<T>::~Buffer() {
+  delete[] array_;
+}
+
+template <typename T>
+size_t Buff<T>::GetSize() const {
+  return size_;
+}
+
+template <typename T>
+size_t Buff<T>::GetContainerSize() const {
+  return size_;
+}
+
+template <typename T>
+void Buff<T>::SetSize(size_t new_size) {
+  size_ = new_size;
+}
+
+template <typename T>
+T* Buff<T>::Begin() {
+  return array_;
+}
+
+template <typename T>
+T* Buff<T>::End() {
+  return array_ + size_;
+}
+
+template <typename T>
+const T* Buff<T>::Begin() const {
+  return array_;
+}
+
+template <typename T>
+const T* Buff<T>::End() const {
+  return array_ + size_;
+}
+
+template <typename T>
+T& Buff<T>::operator[](size_t idx) {
+  return array_[idx];
+}
+
+template <typename T>
+const T& Buff<T>::operator[](size_t idx) const {
+  return array_[idx];
+}
+
+template <typename T>
+void Buff<T>::Resize(size_t new_size) {
+  if (new_size > size_) {
+    size_t upper_bound = std::min(new_size, size_);
+    auto new_array = new T[new_size];
+
+    for (size_t i = 0; i < upper_bound; ++i) {
+      new_array[i] = array_[i];
+    }
+
+    for (size_t i = upper_bound; i < new_size; ++i) {
+      new_array[i] = 0;
+    }
+
+    delete[] array_;
+    array_ = new_array;
+  }
+
+  size_ = new_size;
+  container_size_ = new_size;
+}
+
+template <typename T>
+void Buff<T>::PushBack(T elem) {
   if (size_ == container_size_) {
     container_size_ *= 2;
-    T* new_array = new T[container_size_];
+    auto new_array = new T[container_size_];
 
     for (size_t i = 0; i < size_; ++i) {
       new_array[i] = array_[i];

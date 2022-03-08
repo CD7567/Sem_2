@@ -11,7 +11,6 @@ TEST_CASE("Constructors") {
 
   BigInteger a(100050008);
   oss << a << '\n';
-
   BigInteger b(-9000000002);
   oss << b << '\n';
 
@@ -52,7 +51,7 @@ TEST_CASE("UnaryOperators") {
           "1234567890123456789012345 -1245673456789345012389012\n-1234567890123456789012345 1245673456789345012389012\n");
 }
 
-/*
+
 TEST_CASE("CompoundAdd") {
   BigInteger x(193);
   x += x;
@@ -63,8 +62,6 @@ TEST_CASE("CompoundAdd") {
   REQUIRE(x == BigInteger(0));
   REQUIRE_FALSE(x.IsNegative());
 }
-*/
-
 
 TEST_CASE("Sum") {
   const std::string large(24, '9');
@@ -76,7 +73,7 @@ TEST_CASE("Sum") {
   REQUIRE(-BigInteger(res.c_str()) + BigInteger(large.c_str()) == -BigInteger(large.c_str()));
 }
 
-/*
+
 TEST_CASE("CompoundSubtract") {
   BigInteger x(193);
   x -= -x;
@@ -87,7 +84,7 @@ TEST_CASE("CompoundSubtract") {
   REQUIRE(x == BigInteger(0));
   REQUIRE_FALSE(x.IsNegative());
 }
-*/
+
 
 TEST_CASE("Subtraction") {
   const std::string large(24, '9');
@@ -99,7 +96,7 @@ TEST_CASE("Subtraction") {
   REQUIRE(-BigInteger(large.c_str()) - BigInteger(large.c_str()) == -BigInteger(res.c_str()));
 }
 
-/*
+
 TEST_CASE("CompoundMultiply") {
   BigInteger x(193);
   x *= -x;
@@ -110,7 +107,7 @@ TEST_CASE("CompoundMultiply") {
   REQUIRE(x == BigInteger(0));
   REQUIRE_FALSE(x.IsNegative());
 }
-*/
+
 
 TEST_CASE("Multiplication") {
   {
@@ -129,7 +126,6 @@ TEST_CASE("Multiplication") {
   }
 }
 
-/*
 
 TEST_CASE("Increment") {
   BigInteger x = 0;
@@ -154,6 +150,7 @@ TEST_CASE("Decrement") {
   REQUIRE(x == BigInteger(0));
   REQUIRE_FALSE(x.IsNegative());
 }
+
 
 template <class T>
 void CheckComparisonEqual(const T& lhs, const T& rhs) {
@@ -207,4 +204,15 @@ TEST_CASE("RelationalOperators") {
   CheckComparisonEqual(positive, positive_copy);
   CheckComparisonEqual(negative_copy, negative);
 }
-*/
+
+TEST_CASE("CastOperator") {
+  BigInteger a(0);
+  BigInteger b(10);
+  BigInteger c(-500000);
+  BigInteger d;
+
+  REQUIRE_FALSE(a);
+  REQUIRE(std::as_const(b));
+  REQUIRE(c);
+  REQUIRE_FALSE(d);
+}

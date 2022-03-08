@@ -20,13 +20,19 @@ class BigInteger {
  public:
   BigInteger() = default;
   explicit BigInteger(const char*);
-  BigInteger(long long); // NOLINT
+  explicit BigInteger(int32_t);
+  BigInteger(int64_t);  //  NOLINT
   BigInteger(const BigInteger&);
 
   BigInteger& operator=(const BigInteger&) = default;
 
   friend BigInteger operator+(const BigInteger&);
   friend BigInteger operator-(const BigInteger&);
+
+  friend BigInteger& operator++(BigInteger&);
+  friend BigInteger& operator--(BigInteger&);
+  friend BigInteger operator++(BigInteger&, int);
+  friend BigInteger operator--(BigInteger&, int);
 
   friend BigInteger operator+(const BigInteger&, const BigInteger&);
   friend BigInteger operator-(const BigInteger&, const BigInteger&);
@@ -39,65 +45,39 @@ class BigInteger {
   friend std::ostream& operator<<(std::ostream& out, const BigInteger& num);
 
   friend bool operator==(const BigInteger& lhs, const BigInteger& rhs);
+  friend bool operator!=(const BigInteger& lhs, const BigInteger& rhs);
+  friend bool operator<(const BigInteger& lhs, const BigInteger& rhs);
+  friend bool operator>(const BigInteger& lhs, const BigInteger& rhs);
+  friend bool operator<=(const BigInteger& lhs, const BigInteger& rhs);
+  friend bool operator>=(const BigInteger& lhs, const BigInteger& rhs);
+
+  explicit operator bool() const {
+    return (buffer_.GetSize() > 1) || (buffer_[0] != 0);
+  }
 
   [[nodiscard]]
-  bool IsNegative() const {
-    return is_negative_;
-  }
-
-  [[deprecated]]
-  static void Info(BigInteger&);
-
-  void Invert() {
-    is_negative_ = !is_negative_;
-  }
+  bool IsNegative() const;
 
   template <typename T>
   class Buffer {
    public:
     explicit Buffer(size_t beg_size);
-
     Buffer(const Buffer&);
 
-    ~Buffer() {
-      delete[] array_;
-    };
+    ~Buffer();
 
-    [[nodiscard]] size_t GetSize() const {
-      return size_;
-    }
+    [[nodiscard]] size_t GetSize() const;
+    [[nodiscard]] size_t GetContainerSize() const;
 
-    [[nodiscard]] size_t GetContainerSize() const {
-      return container_size_;
-    };
+    void SetSize(size_t new_size);
 
-    void SetSize(size_t new_size) {
-      size_ = new_size;
-    }
+    T* Begin();
+    T* End();
+    [[nodiscard]] const T* Begin() const;
+    [[nodiscard]] const T* End() const;
 
-    T* Begin() {
-      return array_;
-    }
-
-    T* End() {
-      return array_ + size_;
-    }
-
-    [[nodiscard]] const T* Begin() const {
-      return array_;
-    }
-
-    [[nodiscard]] const T* End() const {
-      return array_ + size_;
-    }
-
-    T& operator[](size_t idx) {
-      return array_[idx];
-    };
-
-    const T& operator[](size_t idx) const {
-      return array_[idx];
-    };
+    T& operator[](size_t idx);
+    const T& operator[](size_t idx) const;
 
     Buffer& operator=(const Buffer& src) {
       delete[] array_;
@@ -114,24 +94,7 @@ class BigInteger {
     }
 
     void PushBack(T elem);
-
-    void Resize(size_t new_size) {
-      size_t upper_bound = std::min(new_size, size_);
-      T* new_array = new T[new_size];
-
-      for (size_t i = 0; i < upper_bound; ++i) {
-        new_array[i] = array_[i];
-      }
-
-      for (size_t i = upper_bound; i < new_size; ++i) {
-        new_array[i] = 0;
-      }
-
-      delete[] array_;
-      array_ = new_array;
-      size_ = new_size;
-      container_size_ = new_size;
-    }
+    void Resize(size_t new_size);
 
    private:
     T* array_;
@@ -144,7 +107,7 @@ class BigInteger {
   const static size_t kBaseDecLen = 4;
 
   bool is_negative_ = false;
-  Buffer <int32_t> buffer_ = Buffer <int32_t>(2);
+  Buffer<int32_t> buffer_ = Buffer<int32_t>(2);
 
   void Normalize();
   void CheckSign();
