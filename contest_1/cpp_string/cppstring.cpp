@@ -11,16 +11,19 @@ void Swap(T& first, T& second) {
 // Realization of class String
 // =================================================
 
-String::String() : size_(0), capacity_(0), buffer_(nullptr) {
+String::String() : size_(0), capacity_(0), buffer_(new char[1]{'\0'}) {
 }
 String::String(size_t beg_size, char symbol = '\0') : size_(beg_size), capacity_(beg_size) {
   if (beg_size == 0) {
-    buffer_ = nullptr;
+    buffer_ = new char[1]{'\0'};
   } else {
-    buffer_ = new char[beg_size];
+    buffer_ = new char[beg_size + 1];
+
     for (size_t i = 0; i < size_; ++i) {
       buffer_[i] = symbol;
     }
+
+    buffer_[size_] = '\0';
   }
 }
 String::String(const char* cstr) {  // NOLINT
@@ -28,24 +31,30 @@ String::String(const char* cstr) {  // NOLINT
   size_ = cstr_size;
   capacity_ = cstr_size;
 
-  buffer_ = new char[cstr_size];
+  buffer_ = new char[cstr_size + 1];
+
   for (size_t i = 0; i < cstr_size; ++i) {
     buffer_[i] = cstr[i];
   }
+
+  buffer_[cstr_size] = '\0';
 }
 String::String(const char* cstr, size_t upper_bound) {
   size_ = upper_bound;
   capacity_ = upper_bound;
 
-  buffer_ = new char[upper_bound];
+  buffer_ = new char[upper_bound + 1];
   for (size_t i = 0; i < upper_bound; ++i) {
     buffer_[i] = cstr[i];
   }
+
+  buffer_[upper_bound] = '\0';
 }
-String::String(const String& src) : size_(src.size_), capacity_(src.capacity_), buffer_(new char[src.capacity_]) {
+String::String(const String& src) : size_(src.size_), capacity_(src.capacity_), buffer_(new char[src.capacity_ + 1]) {
   for (size_t i = 0; i < size_; ++i) {
     buffer_[i] = src.buffer_[i];
   }
+  buffer_[src.capacity_] = '\0';
 }
 
 String::~String() {
@@ -63,15 +72,7 @@ size_t String::Capacity() const {
 }
 
 char* String::CStr() {
-  char* res;
-
-  if (size_ != 0) {
-    res = this->buffer_;
-  } else {
-    res = new char{'\0'};
-  }
-
-  return res;
+  return buffer_;
 }
 char* String::Data() {
   char* res;
@@ -85,15 +86,7 @@ char* String::Data() {
   return res;
 }
 const char* String::CStr() const {
-  char* res;
-
-  if (size_ != 0) {
-    res = this->buffer_;
-  } else {
-    res = new char{'\0'};
-  }
-
-  return res;
+  return buffer_;
 }
 const char* String::Data() const {
   char* res;
@@ -125,23 +118,30 @@ void String::PushBack(char elem) {
   }
 
   buffer_[size_] = elem;
+  buffer_[size_ + 1] = '\0';
   size_++;
 }
 char String::PopBack() {
+  buffer_[size_] = '\0';
   return buffer_[--size_];
 }
 void String::Clear() {
+  if (size_ != 0) {
+    buffer_[0] = '\0';
+  }
   size_ = 0;
 }
 
 void String::Reserve(size_t new_capacity) {
   if (new_capacity > capacity_) {
-    auto* new_buffer = new char[new_capacity];
+    auto* new_buffer = new char[new_capacity + 1];
     capacity_ = new_capacity;
 
     for (size_t i = 0; i < size_; ++i) {
       new_buffer[i] = buffer_[i];
     }
+
+    new_buffer[size_] = '\0';
 
     delete[] buffer_;
     buffer_ = new_buffer;
@@ -154,17 +154,21 @@ void String::Resize(size_t new_size, char symbol) {
     for (size_t i = size_; i < new_size; ++i) {
       buffer_[i] = symbol;
     }
+
+    buffer_[new_size] = '\0';
   }
 
   size_ = new_size;
 }
 void String::ShrinkToFit() {
   if (size_ != capacity_) {
-    auto* new_buffer = new char[size_];
+    auto* new_buffer = new char[size_ + 1];
 
     for (size_t i = 0; i < size_; ++i) {
       new_buffer[i] = buffer_[i];
     }
+
+    new_buffer[size_] = '\0';
 
     delete[] buffer_;
     buffer_ = new_buffer;
@@ -213,6 +217,8 @@ String& operator+=(String& lhs, const String& rhs) {
   for (size_t i = 0; i < rhs.size_; ++i) {
     lhs[lhs.size_ + i] = rhs[i];
   }
+
+  lhs.buffer_[lhs.size_ + rhs.size_] = '\0';
 
   lhs.size_ += rhs.size_;
   return lhs;

@@ -6,7 +6,7 @@
 #include "cppstring.h"
 #include "cppstring.h"  // check include guards
 
-void CheckEqual(const String &actual, std::string_view expected) {
+void CheckEqual(const String& actual, std::string_view expected) {
   REQUIRE(actual.Capacity() >= actual.Size());
   REQUIRE(actual.Size() == expected.size());
   REQUIRE(actual.Length() == expected.size());
@@ -187,8 +187,8 @@ TEST_CASE("DataAccess") {
     REQUIRE(s.CStr()[3] == 'u');
     REQUIRE(s.Data()[3] == 'u');
 
-    REQUIRE((std::is_same_v<decltype(std::declval<const String &>().Data()), const char *>));
-    REQUIRE((std::is_same_v<decltype(std::declval<const String &>().CStr()), const char *>));
+    REQUIRE((std::is_same_v<decltype(std::declval<const String&>().Data()), const char*>));
+    REQUIRE((std::is_same_v<decltype(std::declval<const String&>().CStr()), const char*>));
   }
 }
 
@@ -289,36 +289,23 @@ TEST_CASE("Clear") {
   // Clear
   {
     String s;
-    s.
+    s.Clear();
 
-            Clear();
-
-    CheckEqual(s,
-               "");
+    CheckEqual(s, "");
 
     s = "aba";
-    s.
-
-            Clear();
+    s.Clear();
 
     CheckEqual(s,
                "");
 
-    for (
-            size_t size = 1u;
-            size < 1'000'000; size *= 2u) {
-      for (
-              size_t i = 0u;
-              i < size;
-              ++i) {
+    for (size_t size = 1u; size < 1'000'000; size *= 2u) {
+      for (size_t i = 0u; i < size; ++i) {
         s.PushBack(static_cast<char>('a' + i % 26));
       }
-      s.
+      s.Clear();
 
-              Clear();
-
-      CheckEqual(s,
-                 "");
+      CheckEqual(s, "");
     }
   }
 
@@ -352,7 +339,6 @@ TEST_CASE("Clear") {
         s.
 
                 PopBack();
-
       }
       CheckEqual(s,
                  "abaca");
@@ -434,7 +420,7 @@ TEST_CASE("Resize") {
   }
 }
 
-void CheckComparisonEqual(const String &lhs, const String &rhs) {
+void CheckComparisonEqual(const String& lhs, const String& rhs) {
   REQUIRE(lhs == rhs);
   REQUIRE(lhs <= rhs);
   REQUIRE(lhs >= rhs);
@@ -443,7 +429,7 @@ void CheckComparisonEqual(const String &lhs, const String &rhs) {
   REQUIRE_FALSE(lhs > rhs);
 }
 
-void CheckComparisonLess(const String &lhs, const String &rhs) {
+void CheckComparisonLess(const String& lhs, const String& rhs) {
   REQUIRE_FALSE(lhs == rhs);
   REQUIRE(lhs <= rhs);
   REQUIRE_FALSE(lhs >= rhs);
@@ -452,7 +438,7 @@ void CheckComparisonLess(const String &lhs, const String &rhs) {
   REQUIRE_FALSE(lhs > rhs);
 }
 
-void CheckComparisonGreater(const String &lhs, const String &rhs) {
+void CheckComparisonGreater(const String& lhs, const String& rhs) {
   REQUIRE_FALSE(lhs == rhs);
   REQUIRE_FALSE(lhs <= rhs);
   REQUIRE(lhs >= rhs);

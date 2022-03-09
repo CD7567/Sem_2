@@ -59,17 +59,15 @@ class String {
     if (this != &src) {
       size_ = src.size_;
       capacity_ = src.capacity_;
-      delete[] this->buffer_;
+      delete[] buffer_;
 
-      if (src.size_ != 0) {
-        this->buffer_ = new char[capacity_];
+      buffer_ = new char[capacity_ + 1];
 
-        for (size_t i = 0; i < size_; ++i) {
-          this->buffer_[i] = src.buffer_[i];
-        }
-      } else {
-        this->buffer_ = nullptr;
+      for (size_t i = 0; i < size_; ++i) {
+        buffer_[i] = src.buffer_[i];
       }
+
+      buffer_[size_] = '\0';
     }
 
     return *this;
