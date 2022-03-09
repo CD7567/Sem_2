@@ -1,5 +1,7 @@
 #pragma once
 
+#define ARRAY_TRAITS_IMPLEMENTED
+
 #include <cstddef>
 #include <stdexcept>
 
@@ -78,3 +80,37 @@ class Array {
 
   T array[N];
 };
+
+//  =========================================
+//  Array traits
+//  =========================================
+
+template <typename T, size_t N>
+size_t GetSize(T (&)[N]) {
+  return N;
+}
+
+template <typename T>
+size_t GetSize(T) {
+  return 0;
+}
+
+template <typename T>
+size_t GetRank(T) {
+  return 0;
+}
+
+template <typename T, size_t N>
+size_t GetRank(T (&array)[N]) {
+  return 1 + GetRank(array[0]);
+}
+
+template <typename T>
+size_t GetNumElements(T) {
+  return 1;
+}
+
+template <typename T, size_t N>
+size_t GetNumElements(T (&array)[N]) {
+  return GetSize(array) * GetNumElements(array[0]);
+}
