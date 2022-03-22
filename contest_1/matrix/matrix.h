@@ -48,24 +48,14 @@ class Matrix {
   }
 
   Matrix<T, X, Y> operator+(const Matrix<T, X, Y>& other) const {
-    Matrix<T, X, Y> result;
+    Matrix<T, X, Y> result = *this;
 
-    for (size_t i = 0; i < X; ++i) {
-      for (size_t j = 0; j < Y; ++j) {
-        result.matrix[i][j] = matrix[i][j] + other.matrix[i][j];
-      }
-    }
-
+    result += other;
     return result;
   }
   Matrix<T, X, Y> operator-(const Matrix<T, X, Y>& other) const {
-    Matrix<T, X, Y> result;
-
-    for (size_t i = 0; i < X; ++i) {
-      for (size_t j = 0; j < Y; ++j) {
-        result.matrix[i][j] = matrix[i][j] - other.matrix[i][j];
-      }
-    }
+    Matrix<T, X, Y> result = *this;
+    result -= other;
 
     return result;
   }
@@ -102,44 +92,34 @@ class Matrix {
     return *this;
   }
   Matrix<T, X, Y>& operator*=(const Matrix<T, Y, Y>& other) {
-    T result[X][Y]{};
+    auto row = new T[Y]{};
 
     for (size_t i = 0; i < X; ++i) {
       for (size_t j = 0; j < Y; ++j) {
         for (size_t k = 0; k < Y; ++k) {
-          result[i][j] += matrix[i][k] * other.matrix[k][j];
+          row[j] += matrix[i][k] * other.matrix[k][j];
         }
       }
-    }
 
-    for (size_t i = 0; i < X; ++i) {
       for (size_t j = 0; j < Y; ++j) {
-        matrix[i][j] = result[i][j];
+        matrix[i][j] = row[j];
+        row[j] = 0;
       }
     }
 
+    delete[] row;
     return *this;
   }
 
   Matrix<T, X, Y> operator*(const T& num) const {
-    Matrix<T, X, Y> result;
-
-    for (size_t i = 0; i < X; ++i) {
-      for (size_t j = 0; j < Y; ++j) {
-        result.matrix[i][j] = matrix[i][j] * num;
-      }
-    }
+    Matrix<T, X, Y> result = *this;
+    result *= num;
 
     return result;
   }
   Matrix<T, X, Y> operator/(const T& num) const {
-    Matrix<T, X, Y> result;
-
-    for (size_t i = 0; i < X; ++i) {
-      for (size_t j = 0; j < Y; ++j) {
-        result.matrix[i][j] = matrix[i][j] / num;
-      }
-    }
+    Matrix<T, X, Y> result = *this;
+    result /= num;
 
     return result;
   }
@@ -162,22 +142,13 @@ class Matrix {
     return *this;
   }
   friend Matrix<T, X, Y> operator*(const T& num, const Matrix<T, X, Y>& operand) {
-    Matrix<T, X, Y> result;
-
-    for (size_t i = 0; i < X; ++i) {
-      for (size_t j = 0; j < Y; ++j) {
-        result.matrix[i][j] = operand.matrix[i][j] * num;
-      }
-    }
+    Matrix<T, X, Y> result = operand;
+    result *= num;
 
     return result;
   }
   friend Matrix<T, X, Y>& operator*=(const T& num, Matrix<T, X, Y>& operand) {
-    for (size_t i = 0; i < X; ++i) {
-      for (size_t j = 0; j < Y; ++j) {
-        operand.matrix[i][j] *= num;
-      }
-    }
+    operand *= num;
 
     return operand;
   }

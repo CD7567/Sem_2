@@ -16,6 +16,15 @@ void EqualMatrix(const Matrix<T, N, M>& matrix, const std::array<std::array<T, M
   }
 }
 
+TEST_CASE("Copying") {
+  Matrix<int, 1, 2> a{1, 1};
+  Matrix<int, 1, 2> b = a;
+
+  b(0, 0) = 5;
+  REQUIRE(a(0, 0) == 1);
+  REQUIRE(b(0, 0) == 5);
+}
+
 TEST_CASE("Matrix") {
   static_assert(sizeof(Matrix<int, 17, 2>) == sizeof(int) * 34);
 
