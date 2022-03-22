@@ -6,11 +6,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 
 add_executable(Sem_2 main.cpp)
-add_executable(TestsRunRational test/test_rational.cpp)
-add_executable(TestsRunMatrix test/test_matrix.cpp)
-add_executable(TestsRunBigInt test/test_big_int.cpp)
-add_executable(TestsRunString test/test_string.cpp)
-add_executable(TestsRunStringView test/test_string_view.cpp)
+add_executable(TestsRunRational test/contest_1/test_rational.cpp)
+add_executable(TestsRunMatrix test/contest_1/test_matrix.cpp)
+add_executable(TestsRunBigInt test/contest_1/test_big_int.cpp)
+add_executable(TestsRunString test/contest_1/test_string.cpp)
+add_executable(TestsRunStringView test/contest_1/test_string_view.cpp)
 
 add_library(Rational contest_1/rational/rational.h contest_1/rational/rational.cpp)
 add_library(BigInt contest_1/big_int/big_integer.h contest_1/big_int/big_integer.cpp contest_1/multiply/multiply.h)

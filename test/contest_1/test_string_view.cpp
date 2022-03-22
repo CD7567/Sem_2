@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include "../catch.hpp"
 
 #include "string_view.h"
 #include "string_view.h"  // check include guards

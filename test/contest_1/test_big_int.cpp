@@ -1,10 +1,10 @@
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include "../catch.hpp"
 
 #include <iostream>
 
-#include <big_integer.h>
-#include <big_integer.h>  // check include guards
+#include "big_integer.h"
+#include "big_integer.h"  // check include guards
 
 TEST_CASE("Constructors") {
   std::ostringstream oss;
