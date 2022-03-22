@@ -17,8 +17,8 @@ class Rational {
   Rational(int64_t num, int64_t den);
   Rational(const Rational& src) = default;
 
-  [[nodiscard]] int32_t GetNumerator() const;
-  [[nodiscard]] int32_t GetDenominator() const;
+  [[nodiscard]] int64_t GetNumerator() const;
+  [[nodiscard]] int64_t GetDenominator() const;
 
   void SetNumerator(int64_t num);
   void SetDenominator(int64_t den);

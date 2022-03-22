@@ -33,11 +33,11 @@ Rational::Rational(int64_t num, int64_t den) : numerator_(num), denominator_(den
   }
 }
 
-int32_t Rational::GetNumerator() const {
-  return static_cast<int32_t>(numerator_);
+int64_t Rational::GetNumerator() const {
+  return numerator_;
 }
-int32_t Rational::GetDenominator() const {
-  return static_cast<int32_t>(denominator_);
+int64_t Rational::GetDenominator() const {
+  return denominator_;
 }
 
 void Rational::SetNumerator(const int64_t num) {
@@ -131,10 +131,10 @@ Rational& operator/=(Rational& lhs, const Rational& rhs) {
 }
 
 bool operator==(const Rational& lhs, const Rational& rhs) {
-  return (lhs.numerator_ == rhs.numerator_) && (lhs.denominator_ == rhs.denominator_);
+  return !(lhs < rhs || rhs < lhs);
 }
 bool operator!=(const Rational& lhs, const Rational& rhs) {
-  return !(lhs == rhs);
+  return lhs < rhs || rhs < lhs;
 }
 bool operator<(const Rational& lhs, const Rational& rhs) {
   return (lhs.numerator_ * rhs.denominator_ < rhs.numerator_ * lhs.denominator_);
