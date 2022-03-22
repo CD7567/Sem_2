@@ -116,4 +116,6 @@ class BigInteger {
   static void RawSum(const BigInteger&, const BigInteger&, BigInteger&);
   static void RawSubtract(const BigInteger&, const BigInteger&, BigInteger&);
   static void RawMultiply(const BigInteger&, const BigInteger&, BigInteger&);
+
+  enum class Units : int32_t { TenUnit = 10, HundredUnit = 100, ThousandUnit = 1000 };
 };

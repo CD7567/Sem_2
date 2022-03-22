@@ -214,22 +214,10 @@ BigInteger& operator*=(BigInteger& lhs, const BigInteger& rhs) {
 }
 
 bool operator==(const BigInteger& lhs, const BigInteger& rhs) {
-  bool equals = true;
-
-  if ((lhs.buffer_.GetSize() == rhs.buffer_.GetSize()) && (lhs.is_negative_ == rhs.is_negative_)) {
-    size_t upper_bound = lhs.buffer_.GetSize();
-
-    for (size_t i = 0; (i < upper_bound) && equals; ++i) {
-      equals = (lhs.buffer_[i] == rhs.buffer_[i]);
-    }
-  } else {
-    equals = false;
-  }
-
-  return equals;
+  return !(lhs < rhs || rhs < lhs);
 }
 bool operator!=(const BigInteger& lhs, const BigInteger& rhs) {
-  return !(lhs == rhs);
+  return lhs < rhs || rhs < lhs;
 }
 bool operator<(const BigInteger& lhs, const BigInteger& rhs) {
   size_t lhs_size = lhs.buffer_.GetSize();
@@ -250,25 +238,10 @@ bool operator<(const BigInteger& lhs, const BigInteger& rhs) {
   return result;
 }
 bool operator>(const BigInteger& lhs, const BigInteger& rhs) {
-  size_t lhs_size = lhs.buffer_.GetSize();
-  size_t rhs_size = rhs.buffer_.GetSize();
-  size_t upper_bound = Min(rhs_size, lhs_size);
-  bool result = false;
-
-  if (lhs.IsNegative() != rhs.IsNegative()) {
-    result = !lhs.IsNegative();
-  } else if (lhs_size != rhs_size) {
-    result = (lhs_size > rhs_size);
-  } else {
-    for (size_t i = upper_bound; i > 0 && !result; --i) {
-      result = lhs.buffer_[i - 1] > rhs.buffer_[i - 1];
-    }
-  }
-
-  return result;
+  return rhs < lhs;
 }
 bool operator<=(const BigInteger& lhs, const BigInteger& rhs) {
-  return !(lhs > rhs);
+  return !(rhs < lhs);
 }
 bool operator>=(const BigInteger& lhs, const BigInteger& rhs) {
   return !(lhs < rhs);
@@ -288,12 +261,12 @@ std::ostream& operator<<(std::ostream& out, const BigInteger& num) {
   out << (num.is_negative_ ? "-" : "") << *(num.buffer_.End() - 1);
   for (const int32_t* i = num.buffer_.End() - 2; i >= first_unit_ptr; --i) {
     int32_t unit = *i;
-    out << (unit / 1000);
-    unit %= 1000;
-    out << (unit / 100);
-    unit %= 100;
-    out << (unit / 10);
-    unit %= 10;
+    out << (unit / static_cast<int32_t>(BigInteger::Units::ThousandUnit));
+    unit %= static_cast<int32_t>(BigInteger::Units::ThousandUnit);
+    out << (unit / static_cast<int32_t>(BigInteger::Units::HundredUnit));
+    unit %= static_cast<int32_t>(BigInteger::Units::HundredUnit);
+    out << (unit / static_cast<int32_t>(BigInteger::Units::TenUnit));
+    unit %= static_cast<int32_t>(BigInteger::Units::TenUnit);
     out << unit;
   }
 
