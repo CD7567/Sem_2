@@ -16,8 +16,11 @@ class UniquePtr {
 
   UniquePtr& operator=(const UniquePtr&) = delete;
   UniquePtr& operator=(UniquePtr&& src) noexcept {
-    ptr_ = src.ptr_;
-    src.ptr_ = nullptr;
+    if (this != &src) {
+      delete ptr_;
+      ptr_ = src.ptr_;
+      src.ptr_ = nullptr;
+    }
 
     return *this;
   };
