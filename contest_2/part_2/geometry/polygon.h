@@ -4,18 +4,21 @@
 #include "shape.h"
 
 namespace geometry {
-  class Polygon : IShape {
-    Polygon(const std::vector<Point>&);
+class Polygon : public IShape {
+ public:
+  explicit Polygon(const std::vector<Point>&);
 
-    IShape & Move(const geometry::Vector &) noexcept override;
+  ~Polygon() noexcept override = default;
 
-    bool ContainsPoint(const geometry::Point &) const noexcept override;
-    bool CrossesSegment(const geometry::Segment &) const noexcept override;
+  Polygon& Move(const geometry::Vector&) noexcept override;
 
-    std::unique_ptr<IShape> Clone() const override;
+  [[nodiscard]] bool ContainsPoint(const geometry::Point&) const noexcept override;
+  [[nodiscard]] bool CrossesSegment(const geometry::Segment&) const noexcept override;
 
-    std::string ToString() const noexcept override;
+  [[nodiscard]] std::unique_ptr<IShape> Clone() const override;
 
-    std::vector<Point> vertex_;
-  };
-}
+  std::string ToString() const noexcept override;
+
+  std::vector<Point> vertex_;
+};
+}  // namespace geometry

@@ -108,60 +108,24 @@ BigInteger operator--(BigInteger& src, int) {
 }
 
 BigInteger operator+(const BigInteger& lhs, const BigInteger& rhs) {
-  BigInteger res;
+  BigInteger res = lhs;
 
-  if (lhs.is_negative_) {
-    if (rhs.is_negative_) {
-      BigInteger::RawSum(lhs, rhs, res);
-      res.is_negative_ = true;
-    } else {
-      BigInteger::RawSubtract(lhs, rhs, res);
-      res.is_negative_ = !res.is_negative_;
-    }
-  } else {
-    if (rhs.is_negative_) {
-      BigInteger::RawSubtract(lhs, rhs, res);
-    } else {
-      BigInteger::RawSum(lhs, rhs, res);
-    }
-  }
+  res += rhs;
 
-  res.CheckSign();
   return res;
 }
 BigInteger operator-(const BigInteger& lhs, const BigInteger& rhs) {
-  BigInteger res;
+  BigInteger res = lhs;
 
-  if (lhs.is_negative_) {
-    if (rhs.is_negative_) {
-      BigInteger::RawSubtract(lhs, rhs, res);
-      res.is_negative_ = !res.is_negative_;
-    } else {
-      BigInteger::RawSum(lhs, rhs, res);
-      res.is_negative_ = true;
-    }
-  } else {
-    if (rhs.is_negative_) {
-      BigInteger::RawSum(lhs, rhs, res);
-    } else {
-      BigInteger::RawSubtract(lhs, rhs, res);
-    }
-  }
+  res -= rhs;
 
-  res.CheckSign();
   return res;
 }
 BigInteger operator*(const BigInteger& lhs, const BigInteger& rhs) {
-  BigInteger result;
+  BigInteger result = lhs;
 
-  if (lhs.buffer_.GetSize() + rhs.buffer_.GetSize() > 7500) {
-    throw BigIntegerOverflow();
-  } else {
-    BigInteger::RawMultiply(lhs, rhs, result);
-    result.is_negative_ = lhs.is_negative_ xor rhs.is_negative_;
-  }
+  result *= rhs;
 
-  result.CheckSign();
   return result;
 }
 BigInteger& operator+=(BigInteger& lhs, const BigInteger& rhs) {

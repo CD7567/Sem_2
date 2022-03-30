@@ -1,22 +1,23 @@
 #pragma once
 
-#include "shape.h"
 #include "point.h"
 
 namespace geometry {
-  class Segment :  {
-   public:
-    Segment(const Point&, const Point&);
+class Segment : public IShape {
+ public:
+  Segment(const Point&, const Point&);
 
-    IShape& Move(const geometry::Vector&) noexcept override;
+  ~Segment() noexcept override = default;
 
-    bool ContainsPoint(const geometry::Point&) const noexcept override;
-    bool CrossesSegment(const geometry::Segment&) const noexcept override;
+  Segment& Move(const geometry::Vector&) noexcept override;
 
-    std::unique_ptr<IShape> Clone() const override;
+  [[nodiscard]] bool ContainsPoint(const geometry::Point&) const noexcept override;
+  [[nodiscard]] bool CrossesSegment(const geometry::Segment&) const noexcept override;
 
-    std::string ToString() const noexcept override;
+  [[nodiscard]] std::unique_ptr<IShape> Clone() const override;
 
-    Point begin, end;
-  };
-}
+  [[nodiscard]] std::string ToString() const noexcept override;
+
+  Point begin_, end_;
+};
+}  // namespace geometry

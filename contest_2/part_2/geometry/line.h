@@ -3,18 +3,22 @@
 #include "shape.h"
 
 namespace geometry {
-  class Line : IShape {
-    Line(const Point&, const Point&);
+class Line : public IShape {
+ public:
+  Line(int64_t, int64_t, int64_t);
+  Line(const Point&, const Point&);
 
-    IShape& Move(const geometry::Vector&) noexcept override;
+  ~Line() noexcept override = default;
 
-    bool ContainsPoint(const geometry::Point&) const noexcept override;
-    bool CrossesSegment(const geometry::Segment&) const noexcept override;
+  Line& Move(const geometry::Vector&) noexcept override;
 
-    std::unique_ptr<IShape> Clone() const override;
+  [[nodiscard]] bool ContainsPoint(const geometry::Point&) const noexcept override;
+  [[nodiscard]] bool CrossesSegment(const geometry::Segment&) const noexcept override;
 
-    std::string ToString() const noexcept override;
+  [[nodiscard]] std::unique_ptr<IShape> Clone() const override;
 
-    int64_t a_, b_, c_;
-  };
-}
+  [[nodiscard]] std::string ToString() const noexcept override;
+
+  int64_t a_, b_, c_;
+};
+}  // namespace geometry
