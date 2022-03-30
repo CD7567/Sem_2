@@ -19,6 +19,7 @@ add_executable(TestsRunStringView test/contest_1/test_string_view.cpp)
 add_executable(TestsRunGeometry test/contest_2/test_geometry.cpp)
 add_executable(TestsRunUniquePtr test/contest_2/test_unique_ptr.cpp)
 add_executable(TestsRunSharedPtr test/contest_2/test_shared_ptr.cpp)
+add_executable(TestsRunAny test/contest_2/test_any.cpp)
 
 # ------------------------------------------------------------
 
@@ -79,3 +80,4 @@ target_include_directories(TestsRunStringView PUBLIC contest_1/string_view)
 target_include_directories(TestsRunGeometry PUBLIC contest_2/part_2/geometry)
 target_include_directories(TestsRunUniquePtr PUBLIC contest_2/part_2/unique_ptr)
 target_include_directories(TestsRunSharedPtr PUBLIC contest_2/part_2/shared_ptr)
+target_include_directories(TestsRunAny PUBLIC contest_2/part_2/any)
