@@ -1,8 +1,7 @@
 #include <iostream>
-#include <cmath>
-#include <iomanip>
+#include <cstdio>
 #include <vector>
-#include <algorithm>
+#include <cmath>
 
 struct Point {
   int64_t x_, y_;
@@ -12,22 +11,30 @@ std::istream& operator>>(std::istream& in, Point& point) {
   in >> point.x_ >> point.y_;
   return in;
 }
-std::ostream& operator<<(std::ostream& out, Point& point) {
-  out << point.x_ << " " << point.y_;
-  return out;
-}
 
 bool operator==(const Point& lhs, const Point& rhs) {
   return lhs.x_ == rhs.x_ && lhs.y_ == rhs.y_;
 }
-bool operator!=(const Point& lhs, const Point& rhs) {
-  return !(lhs == rhs);
-}
+
+struct Segment {
+  Point begin_, end_;
+};
+
+class Line {
+ public:
+  Line(const Point& first, const Point& second)
+          : a_(second.y_ - first.y_)
+          , b_(first.x_ - second.x_)
+          , c_(first.y_ * (second.x_ - first.x_) - first.x_ * (second.y_ - first.y_)) {
+  }
+
+  int64_t a_, b_, c_;
+};
 
 class Vector {
  public:
   Vector(const Point& beg, const Point& end)
-      : dim_x_(end.x_ - beg.x_), dim_y_(end.y_ - beg.y_){};
+          : dim_x_(end.x_ - beg.x_), dim_y_(end.y_ - beg.y_){};
   explicit Vector(int64_t dim_x, int64_t dim_y) : dim_x_(dim_x), dim_y_(dim_y){};
 
   [[nodiscard]] int64_t GetSquaredLength() const {
@@ -68,105 +75,70 @@ class Vector {
   int64_t dim_x_, dim_y_;
 };
 
-Point k_base_point;
-bool Compare(const Point& lhs, const Point& rhs) {
+struct Ray {
+  Point begin_;
+  Vector direction_;
+};
+
+bool CrossesSegment(const Point& point, const Segment& segment) {
+  return Vector(segment.begin_, point).IsCodirectional(Vector(point, segment.end_));
+}
+
+bool CrossesSegment(const Line& line, const Segment& segment) {
+  int64_t beg_value = (line.a_ * segment.begin_.x_ + line.b_ * segment.begin_.y_ + line.c_);
+  int64_t end_value = (line.a_ * segment.end_.x_ + line.b_ * segment.end_.y_ + line.c_);
+  return beg_value * end_value <= 0;
+}
+
+bool CrossesSegment(const Ray& ray, const Segment& segment) {
+  Point other_ray_point = ray.begin_;
+  other_ray_point.x_ += ray.direction_.dim_x_;
+  other_ray_point.y_ += ray.direction_.dim_y_;
+
+  Line ray_line{ray.begin_, other_ray_point};
   bool result = false;
-  Vector vect_lhs = Vector(k_base_point, lhs);
-  Vector vect_rhs = Vector(k_base_point, rhs);
-  int64_t prod = Vector::VectorMultiply(vect_lhs, vect_rhs);
 
-  if (prod < 0) {
-    result = true;
-  } else if (prod == 0) {
-    result = vect_lhs.GetSquaredLength() < vect_rhs.GetSquaredLength();
+  if (CrossesSegment(ray_line, segment)) {
+    Vector vect_segment(segment.begin_, segment.end_);
+    Vector vect_from_segment(segment.begin_, ray.begin_);
+    int64_t prod_1 = Vector::VectorMultiply(vect_from_segment, vect_segment);
+    int64_t prod_2 = Vector::VectorMultiply(ray.direction_, vect_segment);
+    result = prod_1 * prod_2 <= 0;
   }
 
   return result;
 }
 
-long double GetSurface(const Point* polygon_beg, const std::vector<size_t>& indices) {
-  int64_t surf = 0;
-  Point begin = polygon_beg[indices.front()];
+bool ContainsPoint(std::vector<Point> vertex, const Point& point) {
+  Ray traced_ray{point, Vector(100001, 1)};
+  Segment side;
+  size_t intersect_counter = 0, vertex_len = vertex.size();
+  bool point_matches = false;
 
-  for (auto i = indices.begin() + 1; i < indices.end() - 1; ++i) {
-    surf += Vector::VectorMultiply(Vector(begin, polygon_beg[*i]), Vector(begin, polygon_beg[*(i + 1)]));
+  for (size_t i = 0; i < vertex_len && !point_matches; ++i) {
+    side.begin_ = vertex[i];
+    side.end_ = vertex[(i + 1) % vertex_len];
+
+    intersect_counter += static_cast<size_t>(CrossesSegment(traced_ray, side));
+
+    point_matches = (point == vertex[i] || point == vertex[(i + 1) % vertex_len] || CrossesSegment(point, side));
   }
 
-  return std::abs(static_cast<long double>(surf) / 2);
-}
-
-std::vector<size_t> GrahamScan(Point* array_beg, size_t length) {
-  size_t idx = 0;
-  int64_t prod;
-  size_t next_point_idx;
-  std::vector<size_t> result;
-
-  for (size_t i = 1; i < length; ++i) {
-    if ((array_beg[i].x_ < array_beg[idx].x_) ||
-        (array_beg[i].x_ == array_beg[idx].x_ && array_beg[i].y_ < array_beg[idx].y_)) {
-      idx = i;
-    }
-  }
-
-  std::swap(array_beg[0], array_beg[idx]);
-  k_base_point = array_beg[0];
-  result.push_back(0);
-  std::sort(array_beg + 1, array_beg + length, Compare);
-
-  for (size_t i = 1; i < length - 1; ++i) {
-    if (array_beg[i] != array_beg[i + 1]) {
-      prod = Vector::VectorMultiply(Vector(array_beg[result.back()], array_beg[i]),
-                                    Vector(array_beg[i], array_beg[(i + 1) % length]));
-      if (prod < 0) {
-        result.push_back(i);
-      } else if (prod > 0) {
-        next_point_idx = i + 1;
-
-        do {
-          i = result.back();
-          result.pop_back();
-          prod = Vector::VectorMultiply(Vector(array_beg[result.back()], array_beg[i]),
-                                        Vector(array_beg[i], array_beg[next_point_idx % length]));
-        } while (prod > 0);
-
-        if (prod != 0) {
-          result.push_back(i);
-        }
-
-        i = next_point_idx - 1;
-      }
-    }
-  }
-
-  if (Compare(array_beg[result.back()], array_beg[length - 1])) {
-    result.push_back(length - 1);
-  } else {
-    result.pop_back();
-    result.push_back(length - 1);
-  }
-
-  return result;
+  return point_matches || static_cast<bool>(intersect_counter % 2);
 }
 
 int main() {
   size_t n;
-  std::cin >> n;
+  Point point;
+  Point polygon_point;
+  std::vector<Point> polygon;
 
-  auto polygon = new Point[n];
+  std::cin >> n >> point;
 
   for (size_t i = 0; i < n; ++i) {
-    std::cin >> polygon[i];
+    std::cin >> polygon_point;
+    polygon.push_back(polygon_point);
   }
 
-  std::vector<size_t> result = GrahamScan(polygon, n);
-
-  std::cout << result.size() << std::endl;
-  for (auto it = result.begin(); it < result.end(); ++it) {
-    std::cout << polygon[*it] << std::endl;
-  }
-
-  std::cout << std::setprecision(1) << std::fixed;
-  std::cout << GetSurface(polygon, result);
-
-  delete[] polygon;
+  std::cout << (ContainsPoint(polygon, point) ? "YES" : "NO");
 }
