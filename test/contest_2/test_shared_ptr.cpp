@@ -30,6 +30,7 @@ const auto copy = a;
 REQUIRE(copy.Get() == nullptr);
 
 REQUIRE(std::is_nothrow_move_constructible_v<SharedPtr<int>>);
+
 }
 
 TEST_CASE("Assignment", "[SharedPtr]") {
