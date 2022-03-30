@@ -32,7 +32,10 @@ class SharedPtr {
       --(counter_->strong_count_);
     } else {
       delete ptr_;
-      delete counter_;
+
+      if (counter_->weak_count_ == 0) {
+        delete counter_;
+      }
     }
   }
 
@@ -40,7 +43,10 @@ class SharedPtr {
     if (this != &src) {
       if (counter_->strong_count_ <= 1) {
         delete ptr_;
-        delete counter_;
+
+        if (counter_->weak_count_ == 0) {
+          delete counter_;
+        }
       } else {
         --counter_->strong_count_;
       }
@@ -61,7 +67,10 @@ class SharedPtr {
     if (this != &src) {
       if (counter_->strong_count_ <= 1) {
         delete ptr_;
-        delete counter_;
+
+        if (counter_->weak_count_ == 0) {
+          delete counter_;
+        }
       } else {
         --counter_->strong_count_;
       }
@@ -79,7 +88,10 @@ class SharedPtr {
   void Reset(T* new_ptr = nullptr) {
     if (counter_->strong_count_ <= 1) {
       delete ptr_;
-      delete counter_;
+
+      if (counter_->weak_count_ == 0) {
+        delete counter_;
+      }
     } else {
       --counter_->strong_count_;
     }
