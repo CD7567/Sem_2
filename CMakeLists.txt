@@ -20,6 +20,7 @@ add_executable(TestsRunGeometry test/contest_2/test_geometry.cpp)
 add_executable(TestsRunUniquePtr test/contest_2/test_unique_ptr.cpp)
 add_executable(TestsRunSharedPtr test/contest_2/test_shared_ptr.cpp)
 add_executable(TestsRunAny test/contest_2/test_any.cpp)
+add_executable(TestsRunTokenize test/contest_2/test_tokenize.cpp)
 
 # ------------------------------------------------------------
 
@@ -48,6 +49,7 @@ set(GEOMETRY_FILES
         )
 
 add_library(Geometry ${GEOMETRY_FILES})
+add_library(Tokenizer contest_2/part_2/tokenize/tokenize.h contest_2/part_2/tokenize/tokenize.cpp)
 
 # ------------------------------------------------------------
 
@@ -62,6 +64,7 @@ target_link_libraries(TestsRunString PUBLIC String)
 # ------------------------------------------------------------
 
 target_link_libraries(TestsRunGeometry PUBLIC Geometry)
+target_link_libraries(TestsRunTokenize PUBLIC Tokenizer)
 
 # ------------------------------------------------------------
 
@@ -81,3 +84,4 @@ target_include_directories(TestsRunGeometry PUBLIC contest_2/part_2/geometry)
 target_include_directories(TestsRunUniquePtr PUBLIC contest_2/part_2/unique_ptr)
 target_include_directories(TestsRunSharedPtr PUBLIC contest_2/part_2/shared_ptr)
 target_include_directories(TestsRunAny PUBLIC contest_2/part_2/any)
+target_include_directories(TestsRunTokenize PUBLIC contest_2/part_2/tokenize)
