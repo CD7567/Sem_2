@@ -8,7 +8,8 @@ struct Vertex {
 
 class Graph {
  public:
-  explicit Graph(size_t dim) : matrix_(std::vector<Vertex>(dim + 1, Vertex())){}
+  explicit Graph(size_t dim) : matrix_(std::vector<Vertex>(dim + 1, Vertex())) {
+  }
 
   void AddEdge(size_t u, size_t v) {
     matrix_[u].adjacent_.push_back(v);
