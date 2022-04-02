@@ -3,7 +3,7 @@
 #include <algorithm>
 
 int main() {
-  size_t number, counter = 1, idx;
+  size_t number, idx;
   int32_t color;
   std::vector<int32_t> animals;
 
