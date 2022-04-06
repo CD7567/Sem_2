@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
-#include <unordered_map>
+#include <map>
+#include <vector>
 
 int main() {
   std::map<std::string, size_t> words;
