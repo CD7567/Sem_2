@@ -15,7 +15,7 @@ REQUIRE_FALSE(a);
 REQUIRE(a.Get() == nullptr);
 }
 
-SECTION("Pointer Constructor") {
+SECTION("pointer Constructor") {
 const UniquePtr<int> a(nullptr);
 REQUIRE_FALSE(a);
 REQUIRE(a.Get() == nullptr);

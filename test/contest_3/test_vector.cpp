@@ -7,7 +7,11 @@
 
 #include "vector.h"
 #include "vector.h"  // check include guards
-/*
+
+TEST_CASE("Custom") {
+  Vector<int> vect(0, 3);
+}
+
 template <class T>
 void Equal(const Vector<T>& real, const std::vector<T>& required) {
   REQUIRE(real.Size() == required.size());
@@ -17,19 +21,19 @@ void Equal(const Vector<T>& real, const std::vector<T>& required) {
 }
 
 TEST_CASE("Member Types", "[Vector]") {
-  REQUIRE((std::is_same_v<Vector<int>::ValueType, int>));
-  REQUIRE((std::is_same_v<Vector<int>::Pointer, decltype(std::declval<Vector<int>>().Data())>));
-  REQUIRE((std::is_same_v<Vector<int>::ConstPointer, decltype(std::declval<const Vector<int>>().Data())>));
-  REQUIRE((std::is_same_v<Vector<int>::Reference, decltype(std::declval<Vector<int>>()[0])>));
-  REQUIRE((std::is_same_v<Vector<int>::Reference, decltype(std::declval<Vector<int>>().At(0))>));
-  REQUIRE((std::is_same_v<Vector<int>::Reference, decltype(std::declval<Vector<int>>().Front())>));
-  REQUIRE((std::is_same_v<Vector<int>::Reference, decltype(std::declval<Vector<int>>().Back())>));
-  REQUIRE((std::is_same_v<Vector<int>::ConstReference, decltype(std::declval<const Vector<int>>()[0])>));
-  REQUIRE((std::is_same_v<Vector<int>::ConstReference, decltype(std::declval<const Vector<int>>().At(0))>));
-  REQUIRE((std::is_same_v<Vector<int>::ConstReference, decltype(std::declval<const Vector<int>>().Front())>));
-  REQUIRE((std::is_same_v<Vector<int>::ConstReference, decltype(std::declval<const Vector<int>>().Back())>));
-  REQUIRE((std::is_same_v<Vector<int>::SizeType, decltype(std::declval<const Vector<int>>().Size())>));
-  REQUIRE((std::is_same_v<Vector<int>::SizeType, decltype(std::declval<const Vector<int>>().Capacity())>));
+  REQUIRE((std::is_same_v<Vector<int>::value_type, int>));
+  REQUIRE((std::is_same_v<Vector<int>::pointer, decltype(std::declval<Vector<int>>().Data())>));
+  REQUIRE((std::is_same_v<Vector<int>::const_pointer, decltype(std::declval<const Vector<int>>().Data())>));
+  REQUIRE((std::is_same_v<Vector<int>::reference, decltype(std::declval<Vector<int>>()[0])>));
+  REQUIRE((std::is_same_v<Vector<int>::reference, decltype(std::declval<Vector<int>>().At(0))>));
+  REQUIRE((std::is_same_v<Vector<int>::reference, decltype(std::declval<Vector<int>>().Front())>));
+  REQUIRE((std::is_same_v<Vector<int>::reference, decltype(std::declval<Vector<int>>().Back())>));
+  REQUIRE((std::is_same_v<Vector<int>::const_reference, decltype(std::declval<const Vector<int>>()[0])>));
+  REQUIRE((std::is_same_v<Vector<int>::const_reference, decltype(std::declval<const Vector<int>>().At(0))>));
+  REQUIRE((std::is_same_v<Vector<int>::const_reference, decltype(std::declval<const Vector<int>>().Front())>));
+  REQUIRE((std::is_same_v<Vector<int>::const_reference, decltype(std::declval<const Vector<int>>().Back())>));
+  REQUIRE((std::is_same_v<Vector<int>::size_type, decltype(std::declval<const Vector<int>>().Size())>));
+  REQUIRE((std::is_same_v<Vector<int>::size_type, decltype(std::declval<const Vector<int>>().Capacity())>));
 }
 
 TEST_CASE("Default", "[Constructor]") {
@@ -1350,4 +1354,3 @@ TEST_CASE("PopBack Memory", "[Memory]") {
 }
 
 #endif
- */

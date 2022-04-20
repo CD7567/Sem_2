@@ -5466,7 +5466,7 @@ namespace Catch {
 
 // end catch_outlier_classification.hpp
 
-#include <iterator>
+#include <Iterator>
 #endif // CATCH_CONFIG_ENABLE_BENCHMARKING
 
 #include <string>
@@ -6897,7 +6897,7 @@ namespace Catch {
 
 // end catch_run_for_at_least.hpp
 #include <algorithm>
-#include <iterator>
+#include <Iterator>
 
 namespace Catch {
     namespace Benchmark {
@@ -6948,7 +6948,7 @@ namespace Catch {
 #include <algorithm>
 #include <functional>
 #include <vector>
-#include <iterator>
+#include <Iterator>
 #include <numeric>
 #include <tuple>
 #include <cmath>
@@ -6961,7 +6961,7 @@ namespace Catch {
         namespace Detail {
             using sample = std::vector<double>;
 
-            double weighted_average_quantile(int k, int q, std::vector<double>::iterator first, std::vector<double>::iterator last);
+            double weighted_average_quantile(int k, int q, std::vector<double>::Iterator first, std::vector<double>::Iterator last);
 
             template <typename Iterator>
             OutlierClassification classify_outliers(Iterator first, Iterator last) {
@@ -7082,14 +7082,14 @@ namespace Catch {
                 double outlier_variance;
             };
 
-            bootstrap_analysis analyse_samples(double confidence_level, int n_resamples, std::vector<double>::iterator first, std::vector<double>::iterator last);
+            bootstrap_analysis analyse_samples(double confidence_level, int n_resamples, std::vector<double>::Iterator first, std::vector<double>::Iterator last);
         } // namespace Detail
     } // namespace Benchmark
 } // namespace Catch
 
 // end catch_stats.hpp
 #include <algorithm>
-#include <iterator>
+#include <Iterator>
 #include <tuple>
 #include <vector>
 #include <cmath>
@@ -7196,7 +7196,7 @@ namespace Catch {
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <iterator>
+#include <Iterator>
 
 namespace Catch {
     namespace Benchmark {
@@ -7227,7 +7227,7 @@ namespace Catch {
 
 // end catch_sample_analysis.hpp
 #include <algorithm>
-#include <iterator>
+#include <Iterator>
 #include <vector>
 
 namespace Catch {
@@ -7735,7 +7735,7 @@ namespace {
         return p * x;
     }
 
-    double standard_deviation(std::vector<double>::iterator first, std::vector<double>::iterator last) {
+    double standard_deviation(std::vector<double>::Iterator first, std::vector<double>::Iterator last) {
         auto m = Catch::Benchmark::Detail::mean(first, last);
         double variance = std::accumulate(first, last, 0., [m](double a, double b) {
             double diff = b - m;
@@ -7750,7 +7750,7 @@ namespace Catch {
     namespace Benchmark {
         namespace Detail {
 
-            double weighted_average_quantile(int k, int q, std::vector<double>::iterator first, std::vector<double>::iterator last) {
+            double weighted_average_quantile(int k, int q, std::vector<double>::Iterator first, std::vector<double>::Iterator last) {
                 auto count = last - first;
                 double idx = (count - 1) * k / static_cast<double>(q);
                 int j = static_cast<int>(idx);
@@ -7809,7 +7809,7 @@ namespace Catch {
                 return (std::min)(var_out(1), var_out((std::min)(c_max(0.), c_max(mg_min)))) / sb2;
             }
 
-            bootstrap_analysis analyse_samples(double confidence_level, int n_resamples, std::vector<double>::iterator first, std::vector<double>::iterator last) {
+            bootstrap_analysis analyse_samples(double confidence_level, int n_resamples, std::vector<double>::Iterator first, std::vector<double>::Iterator last) {
                 CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
                 CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS
                 static std::random_device entropy;
@@ -7817,11 +7817,11 @@ namespace Catch {
 
                 auto n = static_cast<int>(last - first); // seriously, one can't use integral types without hell in C++
 
-                auto mean = &Detail::mean<std::vector<double>::iterator>;
+                auto mean = &Detail::mean<std::vector<double>::Iterator>;
                 auto stddev = &standard_deviation;
 
 #if defined(CATCH_CONFIG_USE_ASYNC)
-                auto Estimate = [=](double(*f)(std::vector<double>::iterator, std::vector<double>::iterator)) {
+                auto Estimate = [=](double(*f)(std::vector<double>::Iterator, std::vector<double>::Iterator)) {
                     auto seed = entropy();
                     return std::async(std::launch::async, [=] {
                         std::mt19937 rng(seed);
@@ -7836,7 +7836,7 @@ namespace Catch {
                 auto mean_estimate = mean_future.get();
                 auto stddev_estimate = stddev_future.get();
 #else
-                auto Estimate = [=](double(*f)(std::vector<double>::iterator, std::vector<double>::iterator)) {
+                auto Estimate = [=](double(*f)(std::vector<double>::Iterator, std::vector<double>::Iterator)) {
                     auto seed = entropy();
                     std::mt19937 rng(seed);
                     auto resampled = resample(rng, n_resamples, first, last, f);

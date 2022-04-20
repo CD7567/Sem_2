@@ -57,7 +57,7 @@ add_library(Tokenizer contest_2/part_2/tokenize/tokenize.h contest_2/part_2/toke
 
 # ------------------------------------------------------------
 
-add_library(Vector contest_3/part_2/vector/vector.h contest_3/part_2/vector/vector.cpp)
+# add_library(Vector contest_3/part_2/vector/vector.h contest_3/part_2/vector/vector.cpp)
 
 # ------------------------------------------------------------
 
@@ -76,7 +76,7 @@ target_link_libraries(TestsRunTokenize PUBLIC Tokenizer)
 
 # ------------------------------------------------------------
 
-target_link_libraries(TestsRunVector PUBLIC Vector)
+# target_link_libraries(TestsRunVector PUBLIC Vector)
 
 # ------------------------------------------------------------
 
