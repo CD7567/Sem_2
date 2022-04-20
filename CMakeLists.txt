@@ -24,6 +24,10 @@ add_executable(TestsRunTokenize test/contest_2/test_tokenize.cpp)
 
 # ------------------------------------------------------------
 
+add_executable(TestsRunVector test/contest_3/test_vector.cpp)
+
+# ------------------------------------------------------------
+
 add_library(Rational contest_1/rational/rational.h contest_1/rational/rational.cpp)
 add_library(BigInt contest_1/big_int/big_integer.h contest_1/big_int/big_integer.cpp contest_1/multiply/multiply.h)
 add_library(String contest_1/cpp_string/cppstring.h contest_1/cpp_string/cppstring.cpp)
@@ -53,6 +57,10 @@ add_library(Tokenizer contest_2/part_2/tokenize/tokenize.h contest_2/part_2/toke
 
 # ------------------------------------------------------------
 
+add_library(Vector contest_3/part_2/vector/vector.h contest_3/part_2/vector/vector.cpp)
+
+# ------------------------------------------------------------
+
 target_link_libraries(Sem_2 PUBLIC String)
 
 # ------------------------------------------------------------
@@ -65,6 +73,10 @@ target_link_libraries(TestsRunString PUBLIC String)
 
 target_link_libraries(TestsRunGeometry PUBLIC Geometry)
 target_link_libraries(TestsRunTokenize PUBLIC Tokenizer)
+
+# ------------------------------------------------------------
+
+target_link_libraries(TestsRunVector PUBLIC Vector)
 
 # ------------------------------------------------------------
 
@@ -85,3 +97,7 @@ target_include_directories(TestsRunUniquePtr PUBLIC contest_2/part_2/unique_ptr)
 target_include_directories(TestsRunSharedPtr PUBLIC contest_2/part_2/shared_ptr)
 target_include_directories(TestsRunAny PUBLIC contest_2/part_2/any)
 target_include_directories(TestsRunTokenize PUBLIC contest_2/part_2/tokenize)
+
+# ------------------------------------------------------------
+
+target_include_directories(TestsRunVector PUBLIC contest_3/part_2/vector)
