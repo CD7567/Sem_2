@@ -45,6 +45,10 @@ void Equal(const Vector<T>& real, const std::vector<T>& required) {
 
 TEST_CASE("Member Types", "[Vector]") {
   REQUIRE((std::is_same_v<Vector<int>::value_type, int>));
+
+  auto a = type_name<Vector<int>::pointer>();
+  auto b = type_name<decltype(std::declval<Vector<int>>().Data())>();
+
   REQUIRE((std::is_same_v<Vector<int>::pointer, decltype(std::declval<Vector<int>>().Data())>));
   REQUIRE((std::is_same_v<Vector<int>::const_pointer, decltype(std::declval<const Vector<int>>().Data())>));
   REQUIRE((std::is_same_v<Vector<int>::reference, decltype(std::declval<Vector<int>>()[0])>));

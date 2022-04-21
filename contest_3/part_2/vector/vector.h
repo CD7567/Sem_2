@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <algorithm>
+#include <memory>
 
 template <typename T>
 class Vector {
@@ -131,101 +132,178 @@ class Vector {
   using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
   Vector() noexcept: buffer_(nullptr), size_(0), capacity_(0) {};
-  explicit Vector(size_type size) : buffer_(nullptr), size_(size), capacity_(size) {
-    if (size_ != 0) {
-      buffer_ = allocator_.allocate(size_);
-    }
-  };
-  Vector(size_type size, const value_type& value) : buffer_(nullptr), size_(size), capacity_(size) {
-    try {
-      if (size_ != 0) {
-        buffer_ = allocator_.allocate(size_);
-        std::fill_n(buffer_, size_, value);
+
+  explicit Vector(size_type size) noexcept: buffer_(nullptr), size_(0), capacity_(0) {
+    if (size != 0) {
+      size_type constructed = 0;
+
+      try {
+        buffer_ = allocator_.allocate(size);
+
+        for (; constructed < size; ++constructed) {
+          new(buffer_ + constructed) value_type();
+        }
+
+        size_ = size;
+        capacity_ = size;
+      } catch (...) {
+          for (size_type i = 0; i < constructed; ++i) {
+            buffer_[i].~value_type();
+          }
+
+        allocator_.deallocate(buffer_, size);
+        buffer_ = nullptr;
       }
-    } catch (...) {
-      allocator_.deallocate(buffer_, capacity_);
-      throw;
     }
   };
+
+  Vector(size_type size, const value_type& value) noexcept: buffer_(nullptr), size_(0), capacity_(0) {
+    if (size != 0) {
+      size_type constructed = 0;
+
+      try {
+        buffer_ = allocator_.allocate(size);
+
+        for (; constructed < size; ++constructed) {
+          new(buffer_ + constructed) value_type(value);
+        }
+
+        size_ = size;
+        capacity_ = size;
+      } catch (...) {
+          for (size_type i = 0; i < constructed; ++i) {
+            buffer_[i].~value_type();
+          }
+
+        allocator_.deallocate(buffer_, size);
+        buffer_ = nullptr;
+      }
+    }
+  };
+
   template <typename Iterator, typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag, typename std::iterator_traits<Iterator>::iterator_category>>>
-  Vector(Iterator first, Iterator last) : buffer_(nullptr) {
+  Vector(Iterator first, Iterator last) noexcept: buffer_(nullptr), size_(0), capacity_(0) {
     difference_type size = last - first;
-    size_ = size;
-    capacity_ = size;
 
     if (size != 0) {
+      size_type constructed = 0;
+
       try {
-        buffer_ = allocator_.allocate(size_);
+        buffer_ = allocator_.allocate(size);
         value_type* it_buffer = buffer_;
 
-        for (auto it = first; it != last; ++it, ++it_buffer) {
-          *it_buffer = *it;
+        for (auto it = first; it != last; ++it, ++it_buffer, ++constructed) {
+          new(it_buffer) value_type(*it);
         }
+
+        size_ = size;
+        capacity_ = size;
       } catch (...) {
+          for (size_type i = 0; i < constructed; ++i) {
+            buffer_[i].~value_type();
+          }
+
         allocator_.deallocate(buffer_, capacity_);
+        buffer_ = nullptr;
+      }
+    }
+  }
+
+  Vector(const std::initializer_list<value_type>& list) noexcept {
+    difference_type size = list.end() - list.begin();
+
+    if (size != 0) {
+      size_type constructed = 0;
+
+      try {
+        buffer_ = allocator_.allocate(size);
+        value_type* it_buffer = buffer_;
+
+        for (auto it = list.begin(); it != list.end(); ++it, ++it_buffer, ++constructed) {
+          new(it_buffer) value_type(*it);
+        }
+
+        size_ = size;
+        capacity_ = size;
+      } catch (...) {
+          for (size_type i = 0; i < constructed; ++i) {
+            buffer_[i].~value_type();
+          }
+
+        allocator_.deallocate(buffer_, capacity_);
+        buffer_ = nullptr;
+      }
+    }
+  }
+
+  Vector(const Vector& src) : buffer_(nullptr), size_(0), capacity_(0) {
+    if (src.capacity_ != 0) {
+      size_type constructed = 0;
+
+      try {
+        buffer_ = allocator_.allocate(capacity_);
+
+        for (size_type i = 0; i < src.size_; ++i, ++constructed) {
+          new (buffer_ + i) value_type(src[i]);
+        }
+
+        size_ = src.size_;
+        capacity_ = src.size_;
+      } catch (...) {
+        for (size_type i = 0; i < constructed; ++i) {
+          buffer_[i].~value_type();
+        }
+
+        allocator_.deallocate(buffer_, capacity_);
+        buffer_ = nullptr;
         throw;
       }
     }
   }
-  Vector(const std::initializer_list<value_type>& list) {
-    difference_type size = list.end() - list.begin();
 
-    try {
-      size_ = size;
-      capacity_ = size;
-      buffer_ = allocator_.allocate(size);
-      auto it_buffer = buffer_;
-
-      for (auto it = list.begin(); it != list.end(); ++it, ++it_buffer) {
-        *it_buffer = *it;
-      }
-    } catch (...) {
-      allocator_.deallocate(buffer_, capacity_);
-    }
-  }
-  Vector(const Vector& src) : buffer_(nullptr), size_(src.size_), capacity_(src.capacity_) {
-    try {
-      buffer_ = allocator_.allocate(capacity_);
-
-      for (size_type i = 0; i < size_; ++i) {
-        buffer_[i] = src[i];
-      }
-    } catch (...) {
-      allocator_.deallocate(buffer_, capacity_);
-      throw;
-    }
-  }
-  Vector(Vector&& other) noexcept : buffer_(other.buffer_), size_(other.size_), capacity_(other.capacity_) {
+  Vector(Vector&& other) noexcept: buffer_(other.buffer_), size_(other.size_), capacity_(other.capacity_) {
     other.buffer_ = nullptr;
     other.size_ = 0;
     other.capacity_ = 0;
   }
 
   ~Vector() noexcept {
+    for (size_type i = 0; i < size_; ++i) {
+      buffer_[i].~value_type();
+    }
+
     allocator_.deallocate(buffer_, capacity_);
   }
 
   Vector& operator=(const Vector& src) {
     if (this != &src) {
-      try {
-        value_type* temp;
+      if (src.capacity_ != 0) {
+        size_type constructed = 0;
+        value_type* temp = nullptr;
 
-        if (src.capacity_ != 0) {
+        try {
           temp = allocator_.allocate(src.capacity_);
 
-          for (size_type i = 0; i < src.size_; ++i) {
-            temp[i] = src[i];
+          for (size_type i = 0; i < src.size_; ++i, ++constructed) {
+            new(temp + i) value_type(src[i]);
           }
 
+          for (size_type i = 0; i < size_; ++i) {
+            buffer_[i].~value_type();
+          }
           allocator_.deallocate(buffer_, capacity_);
 
           buffer_ = temp;
           size_ = src.size_;
           capacity_ = src.capacity_;
+        } catch (...) {
+          for (size_type i = 0; i < constructed; ++i) {
+            temp[i].~value_type();
+          }
+
+          allocator_.deallocate(temp, src.capacity_);
+          throw;
         }
-      } catch (...) {
-        allocator_.deallocate(buffer_, capacity_);
-        throw;
       }
     }
 
@@ -233,7 +311,7 @@ class Vector {
   }
   Vector& operator=(Vector&& src) noexcept {
     if (this != &src) {
-      delete[] buffer_;
+      allocator_.deallocate(buffer_, size_);
 
       buffer_ = src.buffer_;
       size_ = src.size_;
@@ -332,6 +410,9 @@ class Vector {
     return buffer_[size_ - 1];
   }
 
+  pointer Data() noexcept {
+    return buffer_;
+  }
   const_pointer Data() const noexcept {
     return buffer_;
   }
@@ -382,36 +463,68 @@ class Vector {
 
   void Resize(size_type new_size) {
     if (new_size > capacity_) {
-      auto temp = allocator_.allocate(new_size);
+      size_type constructed = 0;
+      value_type* temp = nullptr;
 
-      for (size_type i = 0; i < size_; ++i) {
-        temp[i] = std::move(temp[i]);
+      try {
+        temp = allocator_.allocate(new_size);
+
+        for (size_type i = 0; i < size_; ++i) {
+          new (temp + i) value_type(std::move(buffer_[i]));
+        }
+
+        for (size_type i = 0; i < size_; ++i, ++constructed) {
+          buffer_[i].~value_type();
+        }
+        allocator_.deallocate(buffer_, capacity_);
+
+        buffer_ = temp;
+        size_ = new_size;
+        capacity_ = new_size;
+      } catch (...) {
+        for (size_t i = 0; i < constructed; ++i) {
+          temp[i].~value_type();
+        }
+
+        allocator_.deallocate(temp, new_size);
+        throw;
       }
-
-      allocator_.deallocate(buffer_, capacity_);
-
-      buffer_ = temp;
-      size_ = new_size;
-      capacity_ = new_size;
     } else {
       size_ = new_size;
     }
   }
   void Resize(size_type new_size, const value_type& value) {
     if (new_size > capacity_) {
-      auto temp = allocator_.allocate(new_size);
+      size_type constructed = 0;
+      value_type* temp = nullptr;
 
-      for (size_type i = 0; i < size_; ++i) {
-        temp[i] = std::move(temp[i]);
+      try {
+        temp = allocator_.allocate(new_size);
+
+        for (size_type i = 0; i < size_; ++i, ++constructed) {
+          new (temp + i) value_type(std::move(buffer_[i]));
+        }
+
+        for (size_type i = size_; i < new_size; ++i, ++constructed) {
+          new (temp + i) value_type(value);
+        }
+
+        for (size_type i = 0; i < size_; ++i) {
+          buffer_[i].~value_type();
+        }
+        allocator_.deallocate(buffer_, capacity_);
+
+        buffer_ = temp;
+        size_ = new_size;
+        capacity_ = new_size;
+      } catch (...) {
+        for (size_t i = 0; i < constructed; ++i) {
+          temp[i].~value_type();
+        }
+
+        allocator_.deallocate(temp, new_size);
+        throw;
       }
-
-      std::fill_n(temp + size_, new_size - size_, value);
-
-      allocator_.deallocate(buffer_, capacity_);
-
-      buffer_ = temp;
-      size_ = new_size;
-      capacity_ = new_size;
     } else {
       size_ = new_size;
     }
@@ -419,28 +532,54 @@ class Vector {
 
   void Reserve(size_type new_cap) {
     if (new_cap > capacity_) {
-      auto temp = allocator_.allocate(new_cap);
+      size_type constructed = 0;
+      value_type* temp = nullptr;
 
-      for (size_t i = 0; i < size_; ++i) {
-        temp[i] = std::move(temp[i]);
+      try {
+        temp = allocator_.allocate(new_cap);
+
+        for (size_t i = 0; i < size_; ++i, ++constructed) {
+          new (temp + i) value_type(std::move(buffer_[i]));
+        }
+
+        allocator_.deallocate(buffer_, capacity_);
+        buffer_ = temp;
+        capacity_ = new_cap;
+      } catch (...) {
+        for (size_type i = 0; i < new_cap; ++i) {
+          temp[i].~value_type();
+        }
+
+        allocator_.deallocate(temp, new_cap);
+        throw;
       }
-
-      allocator_.deallocate(buffer_, capacity_);
-      buffer_ = temp;
-      capacity_ = new_cap;
     }
   }
 
   void ShrinkToFit() {
-    auto temp = allocator_.allocate(size_);
+    if (size_ != capacity_) {
+      size_type constructed = 0;
+      value_type* temp = nullptr;
 
-    for (size_t i = 0; i < size_; ++i) {
-      temp[i] = std::move(buffer_[i]);
+      try {
+        temp = allocator_.allocate(size_);
+
+        for (size_t i = 0; i < size_; ++i, ++constructed) {
+          new (temp + i) value_type(std::move(buffer_[i]));
+        }
+
+        allocator_.deallocate(buffer_, capacity_);
+        buffer_ = temp;
+        capacity_ = size_;
+      } catch (...) {
+        for (size_type i = 0; i < constructed; ++i) {
+          temp[i].~value_type();
+        }
+
+        allocator_.deallocate(temp, size_);
+        throw;
+      }
     }
-
-    allocator_.deallocate(buffer_, capacity_);
-    buffer_ = temp;
-    capacity_ = size_;
   }
 
   void Clear() noexcept {
@@ -449,35 +588,65 @@ class Vector {
 
   void PushBack(const value_type& value) {
     if (size_ == capacity_) {
-      auto temp = allocator_.allocate(GetNewCapacity());
+      size_type new_cap = GetNewCapacity();
+      size_type constructed = 0;
+      value_type* temp = nullptr;
 
-      for (size_t i = 0; i < size_; ++i) {
-        temp[i] = std::move(buffer_[i]);
+      try {
+        temp = allocator_.allocate(new_cap);
+
+        for (size_t i = 0; i < size_; ++i, ++constructed) {
+          new (temp + i) value_type(buffer_[i]);
+        }
+
+        allocator_.deallocate(buffer_, capacity_);
+        buffer_ = temp;
+      } catch (...) {
+        for (size_type i = 0; i < constructed; ++i) {
+          temp[i].~value_type();
+        }
+
+        allocator_.deallocate(temp, new_cap);
+        throw;
       }
-
-      allocator_.deallocate(buffer_, capacity_);
-      buffer_ = temp;
     }
 
-    buffer_[size_++] = value;
+    new (buffer_ + size_++) value_type(value);
   }
   void PushBack(value_type&& value) {
     if (size_ == capacity_) {
-      auto temp = allocator_.allocate(GetNewCapacity());
+      size_type new_cap = GetNewCapacity();
+      size_type constructed = 0;
+      value_type* temp = nullptr;
 
-      for (size_t i = 0; i < size_; ++i) {
-        temp[i] = std::move(buffer_[i]);
+      try {
+        temp = allocator_.allocate(new_cap);
+
+        for (size_t i = 0; i < size_; ++i, ++constructed) {
+          new (temp + i) value_type(std::move(buffer_[i]));
+        }
+
+        allocator_.deallocate(buffer_, capacity_);
+        buffer_ = temp;
+      } catch (...) {
+        for (size_type i = 0; i < constructed; ++i) {
+          temp[i].~value_type();
+        }
+
+        allocator_.deallocate(temp, new_cap);
+        throw;
       }
-
-      allocator_.deallocate(buffer_, capacity_);
-      buffer_ = temp;
     }
 
-    buffer_[size_++] = std::move(value);
+    new (buffer_ + size_++) value_type(std::move(value));
   }
 
-  value_type PopBack() noexcept {
-    return std::move(buffer_[size_--]);
+  value_type PopBack() {
+    value_type removed = std::move(buffer_[size_--]);
+
+    buffer_[size_].~value_type();
+
+    return removed;
   }
 
  private:
