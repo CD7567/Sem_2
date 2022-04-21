@@ -30,7 +30,6 @@ class Vector {
 
     template <typename = typename std::enable_if<IsConst>>
     explicit RawIterator(const RawIterator<false>& src) noexcept: ptr_(src.ptr_) {};
-
     RawIterator(RawIterator&& src) noexcept = default;
 
     ~RawIterator() noexcept = default;
@@ -132,43 +131,68 @@ class Vector {
   using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
   Vector() noexcept: buffer_(nullptr), size_(0), capacity_(0) {};
-  explicit Vector(size_type size) : buffer_(new value_type[size]{}), size_(size), capacity_(size) {};
-  Vector(size_type size, const value_type& value) : buffer_(new value_type[size]), size_(size), capacity_(size) {
-    std::fill_n(buffer_, size_, value);
+  explicit Vector(size_type size) : buffer_(nullptr), size_(size), capacity_(size) {
+    if (size_ != 0) {
+      buffer_ = allocator_.allocate(size_);
+    }
+  };
+  Vector(size_type size, const value_type& value) : buffer_(nullptr), size_(size), capacity_(size) {
+    try {
+      if (size_ != 0) {
+        buffer_ = allocator_.allocate(size_);
+        std::fill_n(buffer_, size_, value);
+      }
+    } catch (...) {
+      allocator_.deallocate(buffer_, capacity_);
+      throw;
+    }
   };
   template <typename Iterator, typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag, typename std::iterator_traits<Iterator>::iterator_category>>>
-  Vector(Iterator first, Iterator last) {
+  Vector(Iterator first, Iterator last) : buffer_(nullptr) {
     difference_type size = last - first;
-
-    buffer_ = new value_type[size];
     size_ = size;
     capacity_ = size;
-    size_type i = 0;
 
-    for (auto it = first; it != last; ++it, ++i) {
-      buffer_[i] = *it;
+    if (size != 0) {
+      try {
+        buffer_ = allocator_.allocate(size_);
+        value_type* it_buffer = buffer_;
+
+        for (auto it = first; it != last; ++it, ++it_buffer) {
+          *it_buffer = *it;
+        }
+      } catch (...) {
+        allocator_.deallocate(buffer_, capacity_);
+        throw;
+      }
     }
   }
   Vector(const std::initializer_list<value_type>& list) {
     difference_type size = list.end() - list.begin();
 
-    buffer_ = new value_type[size];
-    size_ = size;
-    capacity_ = size;
-    size_type i = 0;
+    try {
+      size_ = size;
+      capacity_ = size;
+      buffer_ = allocator_.allocate(size);
+      auto it_buffer = buffer_;
 
-    for (auto it = list.begin(); it != list.end(); ++it, ++i) {
-      buffer_[i] = *it;
+      for (auto it = list.begin(); it != list.end(); ++it, ++it_buffer) {
+        *it_buffer = *it;
+      }
+    } catch (...) {
+      allocator_.deallocate(buffer_, capacity_);
     }
   }
-  Vector(const Vector& src) : size_(src.size_), capacity_(src.capacity_) {
-    if (capacity_ == 0) {
-      buffer_ = nullptr;
-    } else {
-      buffer_ = new value_type[capacity_];
+  Vector(const Vector& src) : buffer_(nullptr), size_(src.size_), capacity_(src.capacity_) {
+    try {
+      buffer_ = allocator_.allocate(capacity_);
+
       for (size_type i = 0; i < size_; ++i) {
         buffer_[i] = src[i];
       }
+    } catch (...) {
+      allocator_.deallocate(buffer_, capacity_);
+      throw;
     }
   }
   Vector(Vector&& other) noexcept : buffer_(other.buffer_), size_(other.size_), capacity_(other.capacity_) {
@@ -178,24 +202,31 @@ class Vector {
   }
 
   ~Vector() noexcept {
-    delete[] buffer_;
+    allocator_.deallocate(buffer_, capacity_);
   }
 
   Vector& operator=(const Vector& src) {
     if (this != &src) {
-      delete[] buffer_;
+      try {
+        value_type* temp;
 
-      if (src.capacity_ == 0) {
-        buffer_ = nullptr;
-      } else {
-        buffer_ = new value_type[capacity_];
-        for (size_type i = 0; i < size_; ++i) {
-          buffer_[i] = src[i];
+        if (src.capacity_ != 0) {
+          temp = allocator_.allocate(src.capacity_);
+
+          for (size_type i = 0; i < src.size_; ++i) {
+            temp[i] = src[i];
+          }
+
+          allocator_.deallocate(buffer_, capacity_);
+
+          buffer_ = temp;
+          size_ = src.size_;
+          capacity_ = src.capacity_;
         }
+      } catch (...) {
+        allocator_.deallocate(buffer_, capacity_);
+        throw;
       }
-
-      size_ = src.size_;
-      capacity_ = src.capacity_;
     }
 
     return *this;
@@ -216,21 +247,21 @@ class Vector {
     return *this;
   }
 
-  const value_type& operator[](size_type idx) const {
+  const_reference operator[](size_type idx) const {
     return buffer_[idx];
   }
-  value_type& operator[](size_type idx) {
+  reference operator[](size_type idx) {
     return buffer_[idx];
   }
 
-  const value_type& At(size_type idx) const {
+  const_reference At(size_type idx) const {
     if (idx >= size_) {
       throw std::out_of_range("Index out of bounds");
     } else {
       return buffer_[idx];
     }
   }
-  value_type& At(size_type idx) {
+  reference At(size_type idx) {
     if (idx >= size_) {
       throw std::out_of_range("Index out of bounds");
     } else {
@@ -257,14 +288,11 @@ class Vector {
       ++rhs_it;
     }
 
-    if (lhs_it == lhs_end && lhs.size_ < rhs.size_) {
-      result = true;
-    } else if (rhs_it == rhs_end && lhs.size_ > rhs.size_) {
+    if (lhs_it == lhs_end) {
+      result = lhs.size_ < rhs.size_;
+    } else if (rhs_it == rhs_end) {
       result = false;
     } else {
-
-      //lhs_it -= ((lhs_it == lhs_end) ? 1 : 0);
-      //rhs_it -= ((lhs_it == lhs_end) ? 1 : 0);
       result = *lhs_it < *rhs_it;
     }
 
@@ -280,27 +308,6 @@ class Vector {
     return !(lhs < rhs);
   }
 
-  /*
-  friend bool operator<(const Vector& lhs, const Vector& rhs) {
-    size_type i = 0;
-
-    while (lhs[i] == rhs[i] && i < std::min(rhs.size_, lhs.size_)) {
-      i++;
-    }
-
-    if (i == lhs.size_ && lhs.size_ < rhs.size_) {
-      return true;
-    }
-
-    if (i < std::min(rhs.size_, lhs.size_) && (lhs[i] < rhs[i]) ) {
-      return true;
-    }
-
-    return false;
-  }
-  */
-
-
   [[nodiscard]] size_type Size() const noexcept {
     return size_;
   }
@@ -311,21 +318,21 @@ class Vector {
     return (size_ == 0);
   }
 
-  const value_type& Front() const {
+  const_reference Front() const {
     return buffer_[0];
   }
-  value_type& Front() {
+  reference Front() {
     return buffer_[0];
   }
 
-  const value_type& Back() const {
+  const_reference Back() const {
     return buffer_[size_ - 1];
   }
-  value_type& Back() {
+  reference Back() {
     return buffer_[size_ - 1];
   }
 
-  const value_type* Data() const {
+  const_pointer Data() const noexcept {
     return buffer_;
   }
 
@@ -350,23 +357,23 @@ class Vector {
   }
 
   ReverseIterator rbegin() noexcept {
-    return std::make_reverse_iterator(Iterator{buffer_ + size_ - 1});
+    return std::make_reverse_iterator(Iterator{buffer_ + size_});
   }
   ConstReverseIterator rbegin() const noexcept {
-    return std::make_reverse_iterator(ConstIterator{buffer_ + size_ - 1});
+    return std::make_reverse_iterator(ConstIterator{buffer_ + size_});
   }
   ConstReverseIterator crbegin() const noexcept {
-    return std::make_reverse_iterator(ConstIterator{buffer_ + size_ - 1});
+    return std::make_reverse_iterator(ConstIterator{buffer_ + size_});
   }
 
   ReverseIterator rend() noexcept {
-    return std::make_reverse_iterator(Iterator{buffer_ - 1});
+    return std::make_reverse_iterator(Iterator{buffer_});
   }
   ConstReverseIterator rend() const noexcept {
-    return std::make_reverse_iterator(ConstIterator{buffer_ - 1});
+    return std::make_reverse_iterator(ConstIterator{buffer_});
   }
   ConstReverseIterator crend() const noexcept {
-    return std::make_reverse_iterator(ConstIterator{buffer_ - 1});
+    return std::make_reverse_iterator(ConstIterator{buffer_});
   }
 
   void Swap(Vector& other) noexcept {
@@ -375,36 +382,36 @@ class Vector {
 
   void Resize(size_type new_size) {
     if (new_size > capacity_) {
-      value_type* temp = buffer_;
-      buffer_ = new value_type[new_size]{};
+      auto temp = allocator_.allocate(new_size);
 
       for (size_type i = 0; i < size_; ++i) {
-        buffer_[i] = std::move(temp[i]);
+        temp[i] = std::move(temp[i]);
       }
 
+      allocator_.deallocate(buffer_, capacity_);
+
+      buffer_ = temp;
       size_ = new_size;
       capacity_ = new_size;
-
-      delete[] temp;
     } else {
       size_ = new_size;
     }
   }
   void Resize(size_type new_size, const value_type& value) {
     if (new_size > capacity_) {
-      value_type* temp = buffer_;
-      buffer_ = new value_type[new_size];
+      auto temp = allocator_.allocate(new_size);
 
-      for (size_t i = 0; i < size_; ++i) {
-        buffer_[i] = std::move(temp[i]);
+      for (size_type i = 0; i < size_; ++i) {
+        temp[i] = std::move(temp[i]);
       }
 
-      std::fill_n(buffer_ + size_, new_size - size_, value);
+      std::fill_n(temp + size_, new_size - size_, value);
 
+      allocator_.deallocate(buffer_, capacity_);
+
+      buffer_ = temp;
       size_ = new_size;
       capacity_ = new_size;
-
-      delete[] temp;
     } else {
       size_ = new_size;
     }
@@ -412,30 +419,28 @@ class Vector {
 
   void Reserve(size_type new_cap) {
     if (new_cap > capacity_) {
-      value_type* temp = buffer_;
-      buffer_ = new value_type[new_cap];
+      auto temp = allocator_.allocate(new_cap);
 
       for (size_t i = 0; i < size_; ++i) {
-        buffer_[i] = std::move(temp[i]);
+        temp[i] = std::move(temp[i]);
       }
 
+      allocator_.deallocate(buffer_, capacity_);
+      buffer_ = temp;
       capacity_ = new_cap;
-
-      delete[] temp;
     }
   }
 
   void ShrinkToFit() {
-    value_type* temp = buffer_;
-    buffer_ = new value_type[size_];
+    auto temp = allocator_.allocate(size_);
 
     for (size_t i = 0; i < size_; ++i) {
-      buffer_[i] = std::move(temp[i]);
+      temp[i] = std::move(buffer_[i]);
     }
 
+    allocator_.deallocate(buffer_, capacity_);
+    buffer_ = temp;
     capacity_ = size_;
-
-    delete[] temp;
   }
 
   void Clear() noexcept {
@@ -444,30 +449,28 @@ class Vector {
 
   void PushBack(const value_type& value) {
     if (size_ == capacity_) {
-      value_type* temp = buffer_;
-      buffer_ = new value_type[GetNewCapacity()];
+      auto temp = allocator_.allocate(GetNewCapacity());
 
       for (size_t i = 0; i < size_; ++i) {
-        buffer_[i] = std::move(temp[i]);
+        temp[i] = std::move(buffer_[i]);
       }
 
-      buffer_[size_++] = std::move(value);
-
-      delete[] temp;
+      allocator_.deallocate(buffer_, capacity_);
+      buffer_ = temp;
     }
 
     buffer_[size_++] = value;
   }
   void PushBack(value_type&& value) {
     if (size_ == capacity_) {
-      value_type* temp = buffer_;
-      buffer_ = new value_type[GetNewCapacity()];
+      auto temp = allocator_.allocate(GetNewCapacity());
 
       for (size_t i = 0; i < size_; ++i) {
-        buffer_[i] = std::move(temp[i]);
+        temp[i] = std::move(buffer_[i]);
       }
 
-      delete[] temp;
+      allocator_.deallocate(buffer_, capacity_);
+      buffer_ = temp;
     }
 
     buffer_[size_++] = std::move(value);
@@ -488,6 +491,7 @@ class Vector {
     return new_cap;
   }
 
+  std::allocator<value_type> allocator_;
   value_type* buffer_;
 
   size_type size_;

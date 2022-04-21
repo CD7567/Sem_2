@@ -22,7 +22,8 @@ void f(int&& i) {
 };
 
 int main() {
-  Vector<int> a{ 1, 4, 6, 8 };
-  Vector<int> b{ 2, 3, 5, 7 };
-  std::cout << (a == b) << std::endl;
+  std::allocator<int> allocator;
+  int* a = nullptr;
+
+  allocator.deallocate(nullptr, 1);
 }
