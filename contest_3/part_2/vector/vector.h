@@ -1,6 +1,6 @@
 #pragma once
 
-//  #define VECTOR_MEMORY_IMPLEMENTED
+#define VECTOR_MEMORY_IMPLEMENTED
 
 #include <cstdint>
 #include <algorithm>
@@ -138,24 +138,23 @@ class Vector {
 
   explicit Vector(SizeType size) : buffer_(nullptr), size_(0), capacity_(0) {
     if (size != 0) {
-      SizeType constructed = 0;
-
       try {
         buffer_ = allocator_.allocate(size);
 
+        /*
         for (; constructed < size; ++constructed) {
           new (buffer_ + constructed) ValueType();
         }
+         */
+
+        InitByDefault(buffer_, size);
 
         size_ = size;
         capacity_ = size;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          buffer_[i].~ValueType();
-        }
-
         allocator_.deallocate(buffer_, size);
         buffer_ = nullptr;
+
         throw;
       }
     }
@@ -748,6 +747,8 @@ class Vector {
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
           new (temp + i) ValueType(std::move(buffer_[i]));
         }
+        ++constructed;
+        new (temp + size_) ValueType(std::forward<Args>(args)...);
 
         for (SizeType i = 0; i < size_; ++i) {
           buffer_[i].~ValueType();
@@ -756,18 +757,28 @@ class Vector {
 
         buffer_ = temp;
         capacity_ = new_cap;
+        ++size_;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
+        for (SizeType i = 0; i < constructed && i < size_; ++i) {
           buffer_[i] = std::move(temp[i]);
           temp[i].~ValueType();
+        }
+
+        if (constructed == size_ + 1) {
+          temp[size_].~ValueType();
         }
 
         allocator_.deallocate(temp, new_cap);
         throw;
       }
+    } else {
+      try {
+        new (buffer_ + size_) ValueType(std::forward<Args>(args)...);
+        ++size_;
+      } catch (...) {
+        buffer_[size_].~ValueType();
+      }
     }
-
-    new (buffer_ + size_++) ValueType(std::forward<Args>(args)...);
   }
 
   ValueType PopBack() {
@@ -787,6 +798,22 @@ class Vector {
     }
 
     return new_cap;
+  }
+
+  inline void InitByDefault(Pointer raw_begin, SizeType n) {
+    SizeType constructed = 0;
+
+    try {
+      for (SizeType i = 0; i < n; ++i, ++constructed) {
+        new (raw_begin + i) ValueType();
+      }
+    } catch (...) {
+      for (SizeType i = 0; i < constructed; ++i) {
+        raw_begin[i].~ValueType();
+      }
+
+      throw;
+    }
   }
 
   std::allocator<ValueType> allocator_;
