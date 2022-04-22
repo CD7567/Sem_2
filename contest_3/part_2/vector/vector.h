@@ -446,6 +446,9 @@ class Vector {
       try {
         temp = allocator_.allocate(new_size);
 
+        //constructed += InitByDefault(temp + size_, new_size - size_);
+        //constructed += InitByMove(temp, size_, buffer_);
+
         for (SizeType i = size_; i < new_size; ++i, ++constructed) {
           new (temp + i) ValueType();
         }
@@ -463,9 +466,10 @@ class Vector {
         size_ = new_size;
         capacity_ = new_size;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
+        Destroy(temp + size_, constructed);
+        /*for (SizeType i = 0; i < constructed; ++i) {
           temp[size_ + i].~ValueType();
-        }
+        }*/
 
         allocator_.deallocate(temp, new_size);
         throw;
@@ -799,6 +803,39 @@ class Vector {
         new (raw_begin + i) ValueType(*it_src);
       }
     } catch (...) {
+      Destroy(raw_begin, constructed);
+
+      throw;
+    }
+
+    return constructed;
+  }
+  inline SizeType InitByMove(Pointer raw_begin, SizeType n, Reference src) {
+    SizeType constructed = 0;
+
+    try {
+      for (SizeType i = 0; i < n; ++i, ++constructed) {
+        new (raw_begin + i) ValueType(std::move(src));
+      }
+    } catch (...) {
+      Destroy(raw_begin, constructed);
+
+      throw;
+    }
+
+    return constructed;
+  }
+  inline SizeType InitByMove(Pointer raw_begin, SizeType n, Pointer src) {
+    SizeType constructed = 0;
+
+    try {
+      for (SizeType i = 0; i < n; ++i, ++constructed) {
+        new (raw_begin + i) ValueType(std::move(src[i]));
+      }
+    } catch (...) {
+      for (SizeType i = 0; i < constructed; ++i) {
+        src[i] = std::move(raw_begin[i]);
+      }
       Destroy(raw_begin, constructed);
 
       throw;
