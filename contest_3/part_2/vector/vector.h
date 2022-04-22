@@ -556,9 +556,7 @@ class Vector {
   }
 
   void Clear() noexcept {
-    for (SizeType i = 0; i < size_; ++i) {
-      buffer_[i].~ValueType();
-    }
+    Destroy(buffer_, size_);
 
     size_ = 0;
   }
