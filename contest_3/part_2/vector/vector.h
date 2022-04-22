@@ -775,7 +775,7 @@ class Vector {
 
     buffer_[size_].~ValueType();
 
-    return std::move(removed);
+    return removed;
   }
 
  private:
