@@ -531,12 +531,12 @@ class Vector {
       try {
         temp = allocator_.allocate(new_size);
 
-        for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(std::move(buffer_[i]));
-        }
-
         for (SizeType i = size_; i < new_size; ++i, ++constructed) {
           new(temp + i) ValueType(value);
+        }
+
+        for (SizeType i = 0; i < size_; ++i, ++constructed) {
+          new(temp + i) ValueType(std::move(buffer_[i]));
         }
 
         for (SizeType i = 0; i < size_; ++i) {
@@ -549,22 +549,32 @@ class Vector {
         capacity_ = new_size;
       } catch (...) {
         for (SizeType i = 0; i < constructed; ++i) {
-          temp[i].~ValueType();
+          temp[size_ + i].~ValueType();
         }
 
         allocator_.deallocate(temp, new_size);
         throw;
       }
     } else {
-      for (SizeType i = new_size; i < size_; ++i) {
-        buffer_[i].~ValueType();
-      }
+      SizeType constructed = 0;
 
-      for (SizeType i = size_; i < new_size; ++i) {
-        new(buffer_ + i) ValueType(value);
-      }
+      try {
+        for (SizeType i = size_; i < new_size; ++i, ++constructed) {
+          new(buffer_ + i) ValueType(value);
+        }
 
-      size_ = new_size;
+        for (SizeType i = new_size; i < size_; ++i) {
+          buffer_[i].~ValueType();
+        }
+
+        size_ = new_size;
+      } catch (...) {
+        for (SizeType i = 0; i < constructed; ++i) {
+          buffer_[size_ + i].~ValueType();
+        }
+
+        throw;
+      }
     }
   }
 
