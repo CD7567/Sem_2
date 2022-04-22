@@ -708,6 +708,7 @@ class Vector {
         capacity_ = new_cap;
       } catch (...) {
         for (SizeType i = 0; i < constructed; ++i) {
+          buffer_[i] = std::move(temp[i]);
           temp[i].~ValueType();
         }
 
