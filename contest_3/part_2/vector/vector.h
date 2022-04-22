@@ -278,6 +278,7 @@ class Vector {
         try {
           temp = allocator_.allocate(src.capacity_);
 
+          /*
           for (SizeType i = 0; i < src.size_; ++i, ++constructed) {
             new (temp + i) ValueType(src.buffer_[i]);
           }
@@ -285,23 +286,23 @@ class Vector {
           for (SizeType i = 0; i < size_; ++i) {
             buffer_[i].~ValueType();
           }
+           */
+
+          InitByCopy(temp, src.size_, src.buffer_);
+          Destroy(buffer_, size_);
+
           allocator_.deallocate(buffer_, capacity_);
 
           buffer_ = temp;
           size_ = src.size_;
           capacity_ = src.capacity_;
         } catch (...) {
-          for (SizeType i = 0; i < constructed; ++i) {
-            temp[i].~ValueType();
-          }
-
           allocator_.deallocate(temp, src.capacity_);
+
           throw;
         }
       } else {
-        for (SizeType i = 0; i < size_; ++i) {
-          buffer_[i].~ValueType();
-        }
+        Destroy(buffer_, size_);
 
         allocator_.deallocate(buffer_, size_);
         buffer_ = nullptr;
