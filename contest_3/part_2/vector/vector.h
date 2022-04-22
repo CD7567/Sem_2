@@ -159,12 +159,6 @@ class Vector {
       try {
         buffer_ = allocator_.allocate(size);
 
-        /*
-        for (; constructed < size; ++constructed) {
-          new (buffer_ + constructed) ValueType(value);
-        }
-         */
-
         InitByCopy(buffer_, size, value);
 
         size_ = size;
@@ -205,17 +199,8 @@ class Vector {
     DifferenceType size = list.end() - list.begin();
 
     if (size != 0) {
-      SizeType constructed = 0;
-
       try {
         buffer_ = allocator_.allocate(size);
-        /*
-        Pointer it_buffer = buffer_;
-
-        for (auto it = list.begin(); it != list.end(); ++it, ++it_buffer, ++constructed) {
-          new (it_buffer) ValueType(*it);
-        }
-         */
 
         InitByCopy(buffer_, size, list.begin());
 
@@ -262,9 +247,7 @@ class Vector {
   }
 
   ~Vector() noexcept {
-    for (SizeType i = 0; i < size_; ++i) {
-      buffer_[i].~ValueType();
-    }
+    Destroy(buffer_, size_);
 
     allocator_.deallocate(buffer_, capacity_);
   }
@@ -272,21 +255,10 @@ class Vector {
   Vector& operator=(const Vector& src) {
     if (this != &src) {
       if (src.capacity_ != 0) {
-        SizeType constructed = 0;
         Pointer temp = nullptr;
 
         try {
           temp = allocator_.allocate(src.capacity_);
-
-          /*
-          for (SizeType i = 0; i < src.size_; ++i, ++constructed) {
-            new (temp + i) ValueType(src.buffer_[i]);
-          }
-
-          for (SizeType i = 0; i < size_; ++i) {
-            buffer_[i].~ValueType();
-          }
-           */
 
           InitByCopy(temp, src.size_, src.buffer_);
           Destroy(buffer_, size_);
