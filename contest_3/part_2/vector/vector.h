@@ -287,9 +287,7 @@ class Vector {
   }
   Vector& operator=(Vector&& src) noexcept {
     if (this != &src) {
-      for (SizeType i = 0; i < size_; ++i) {
-        buffer_[i].~ValueType();
-      }
+      Destroy(buffer_, size_);
       allocator_.deallocate(buffer_, capacity_);
 
       buffer_ = src.buffer_;
