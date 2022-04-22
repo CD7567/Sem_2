@@ -663,7 +663,7 @@ class Vector {
         temp = allocator_.allocate(new_cap);
 
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(buffer_[i]);
+          new(temp + i) ValueType(std::move(buffer_[i]));
         }
 
         for (SizeType i = 0; i < size_; ++i) {
@@ -675,6 +675,7 @@ class Vector {
         capacity_ = new_cap;
       } catch (...) {
         for (SizeType i = 0; i < constructed; ++i) {
+          buffer_[i] = std::move(temp[i]);
           temp[i].~ValueType();
         }
 
