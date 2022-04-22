@@ -535,24 +535,16 @@ class Vector {
         try {
           temp = allocator_.allocate(size_);
 
-          for (SizeType i = 0; i < size_; ++i, ++constructed) {
-            new (temp + i) ValueType(std::move(buffer_[i]));
-          }
+          InitByMove(temp, size_, buffer_);
 
-          for (SizeType i = 0; i < size_; ++i) {
-            buffer_[i].~ValueType();
-          }
+          Destroy(buffer_, size_);
           allocator_.deallocate(buffer_, capacity_);
 
           buffer_ = temp;
           capacity_ = size_;
         } catch (...) {
-          for (SizeType i = 0; i < constructed; ++i) {
-            buffer_[i] = std::move(temp[i]);
-            temp[i].~ValueType();
-          }
-
           allocator_.deallocate(temp, size_);
+
           throw;
         }
       } else {
