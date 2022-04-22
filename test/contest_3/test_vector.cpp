@@ -2,38 +2,12 @@
 #include "../catch.hpp"
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <type_traits>
 
 #include "vector.h"
 #include "vector.h"  // check include guards
-
-TEST_CASE("Custom") {
-  Vector<int> vect(0, 3);
-}
-
-template <class T>
-constexpr
-std::string_view
-type_name()
-{
-  using namespace std;
-#ifdef __clang__
-  string_view p = __PRETTY_FUNCTION__;
-    return string_view(p.data() + 34, p.size() - 34 - 1);
-#elif defined(__GNUC__)
-  string_view p = __PRETTY_FUNCTION__;
-#  if __cplusplus < 201402
-  return string_view(p.data() + 36, p.size() - 36 - 1);
-#  else
-  return string_view(p.data() + 49, p.find(';', 49) - 49);
-#  endif
-#elif defined(_MSC_VER)
-  string_view p = __FUNCSIG__;
-    return string_view(p.data() + 84, p.size() - 84 - 7);
-#endif
-}
-
 
 template <class T>
 void Equal(const Vector<T>& real, const std::vector<T>& required) {
@@ -45,10 +19,6 @@ void Equal(const Vector<T>& real, const std::vector<T>& required) {
 
 TEST_CASE("Member Types", "[Vector]") {
   REQUIRE((std::is_same_v<Vector<int>::ValueType, int>));
-
-  auto a = type_name<Vector<int>::Pointer>();
-  auto b = type_name<decltype(std::declval<Vector<int>>().Data())>();
-
   REQUIRE((std::is_same_v<Vector<int>::Pointer, decltype(std::declval<Vector<int>>().Data())>));
   REQUIRE((std::is_same_v<Vector<int>::ConstPointer, decltype(std::declval<const Vector<int>>().Data())>));
   REQUIRE((std::is_same_v<Vector<int>::Reference, decltype(std::declval<Vector<int>>()[0])>));
@@ -98,8 +68,10 @@ TEST_CASE("FillInitialization", "[Constructor]") {
   }
 
   {
-    const Vector<std::string> v(5u, "aba");
-    Equal(v, std::vector<std::string>(5u, "aba"));
+    std::string_view filler = "abacababacacabacacbbcabcabracadabra";
+
+    const Vector<std::string> v(5u, std::string(filler));
+    Equal(v, std::vector<std::string>(5u, std::string(filler)));
     REQUIRE(v.Capacity() == 5u);
   }
 }
@@ -916,10 +888,6 @@ TEST_CASE("ReverseIterator", "[Iterators]") {
 TEST_CASE("ConstReverseIterator", "[Iterators]") {
   {
     using ConstReverseIterator = Vector<int>::ConstReverseIterator;
-
-    //auto i = type_name<decltype(std::declval<Vector<int>>().crbegin())>();
-    //auto j = type_name<ConstReverseIterator>();
-
     REQUIRE((std::is_same_v<ConstReverseIterator, decltype(std::declval<Vector<int>>().crbegin())>));
     REQUIRE((std::is_same_v<ConstReverseIterator, decltype(std::declval<Vector<int>>().crend())>));
     REQUIRE((std::is_same_v<ConstReverseIterator, decltype(std::declval<const Vector<int>>().rbegin())>));
@@ -986,107 +954,181 @@ class Throwable {
 int Throwable::until_throw = 0;
 
 TEST_CASE("Size Constructor", "[Safety]") {
-  Throwable::until_throw = 10;
-  REQUIRE_THROWS_AS(Vector<Throwable>(100u), Exception);  // NOLINT
+  Throwable::until_throw = 5;
+  REQUIRE_THROWS_AS(Vector<Throwable>(10u), Exception);  // NOLINT
 }
 
 TEST_CASE("Value Constructor", "[Safety]") {
-  Throwable::until_throw = 10;
-  REQUIRE_THROWS_AS(Vector<Throwable>(100u, Throwable{}), Exception);  // NOLINT
+  Throwable::until_throw = 5;
+  REQUIRE_THROWS_AS(Vector<Throwable>(10u, Throwable{}), Exception);  // NOLINT
+
+  try {  // no memory management case
+    Throwable::until_throw = 15;
+    Vector<Throwable> v(10u, Throwable{});
+  } catch (Exception) {
+  }
 }
 
 TEST_CASE("Iterators Constructor", "[Safety]") {
-  Throwable::until_throw = 110;
-  std::vector<Throwable> values(100u, Throwable{});
+  Throwable::until_throw = 210;
+  const std::vector<Throwable> values(100u, Throwable{});
+  Throwable::until_throw = 50;
   REQUIRE_THROWS_AS(Vector<Throwable>(values.begin(), values.end()), Exception);  // NOLINT
+
+  try {  // no memory management case
+    Throwable::until_throw = 150;
+    Vector<Throwable> v(values.begin(), values.end());
+  } catch (Exception) {
+  }
 }
 
 TEST_CASE("Initializer List Constructor", "[Safety]") {
-  Throwable::until_throw = 8;
+  Throwable::until_throw = 6;
   REQUIRE_THROWS_AS(Vector<Throwable>({Throwable{}, Throwable{}, Throwable{}, Throwable{}}), Exception);  // NOLINT
+
+  try {  // no memory management case
+    Throwable::until_throw = 10;
+    Vector<Throwable> v({Throwable{}, Throwable{}, Throwable{}, Throwable{}});
+  } catch (Exception) {
+  }
 }
 
 TEST_CASE("Copy Constructor Safety", "[Safety]") {
-  Throwable::until_throw = 150;
+  Throwable::until_throw = 210;
   const Vector<Throwable> values(100u, Throwable{});
+  Throwable::until_throw = 50;
   REQUIRE_THROWS_AS(Vector<Throwable>(values), Exception);  // NOLINT
+
+  try {  // no memory management case
+    Throwable::until_throw = 150;
+    Vector<Throwable> v(values);
+  } catch (Exception) {
+  }
 }
 
 TEST_CASE("Move Constructor Safety", "[Safety]") {
-  Throwable::until_throw = 150;
+  Throwable::until_throw = 210;
   Vector<Throwable> values(100u, Throwable{});
+  Throwable::until_throw = 1;
   REQUIRE_NOTHROW(Vector<Throwable>(std::move(values)));  // NOLINT
 }
 
 TEST_CASE("Copy Assignment Safety", "[Safety]") {
   {
-    Throwable::until_throw = 8;
+    Throwable::until_throw = 12;
     const Vector<Throwable> values(5u);
-    Vector<Throwable> v;
-    REQUIRE_THROWS_AS(v = values, Exception);  // NOLINT
 
+    Vector<Throwable> v;
+    Throwable::until_throw = 3;
+    REQUIRE_THROWS_AS(v = values, Exception);  // NOLINT
     REQUIRE(v.Capacity() >= v.Size());
+
+    try {  // no memory management case
+      Vector<Throwable> vv;
+      Throwable::until_throw = 8;
+      vv = values;
+    } catch (Exception) {
+    }
   }
 
   {
-    Throwable::until_throw = 50;
+    Throwable::until_throw = 100;
     const Vector<Throwable> values(10u);
     Vector<Throwable> v(35u);
+    Throwable::until_throw = 5;
     REQUIRE_THROWS_AS(v = values, Exception);  // NOLINT
-
     REQUIRE(v.Capacity() >= v.Size());
   }
 }
 
 TEST_CASE("Move Assignment Safety", "[Safety]") {
   {
-    Throwable::until_throw = 8;
+    Throwable::until_throw = 12;
     Vector<Throwable> values(5u);
     Vector<Throwable> v;
+    Throwable::until_throw = 1;
     REQUIRE_NOTHROW(v = std::move(values));  // NOLINT
   }
 
   {
-    Throwable::until_throw = 50;
+    Throwable::until_throw = 100;
     Vector<Throwable> values(10u);
     Vector<Throwable> v(35u);
+    Throwable::until_throw = 1;
     REQUIRE_NOTHROW(v = std::move(values));  // NOLINT
   }
 }
 
 TEST_CASE("Swap Safety", "[Safety]") {
-  Throwable::until_throw = 8;
+  Throwable::until_throw = 12;
   Vector<Throwable> values(5u);
   Vector<Throwable> v;
+  Throwable::until_throw = 1;
   REQUIRE_NOTHROW(v.Swap(values));  // NOLINT
 }
 
 TEST_CASE("Resize Safety", "[Safety]") {
-  Throwable::until_throw = 100;
+  Throwable::until_throw = 200;
   Vector<Throwable> v(90u);
   const auto capacity = v.Capacity();
   const auto data = v.Data();
 
-  REQUIRE_NOTHROW(v.Resize(90u));                // NOLINT
-  REQUIRE_NOTHROW(v.Resize(50u));                // NOLINT
-  REQUIRE_NOTHROW(v.Resize(10u));                // NOLINT
+  REQUIRE_NOTHROW(v.Resize(90u));  // NOLINT
+  REQUIRE_NOTHROW(v.Resize(50u));  // NOLINT
+  REQUIRE_NOTHROW(v.Resize(10u));  // NOLINT
+
+  Throwable::until_throw = 10;
   REQUIRE_THROWS_AS(v.Resize(200u), Exception);  // NOLINT
   REQUIRE(v.Size() == 10u);
   REQUIRE(v.Capacity() == capacity);
   REQUIRE(v.Data() == data);
+
+  try {  // no memory management case
+    Throwable::until_throw = 300;
+    v.Resize(200, {});
+  } catch (Exception) {
+    REQUIRE(v.Size() == 10u);
+    REQUIRE(v.Capacity() == capacity);
+    REQUIRE(v.Data() == data);
+  }
 }
 
 TEST_CASE("Reserve Safety", "[Safety]") {
-  Throwable::until_throw = 35;
+  Throwable::until_throw = 55;
   Vector<Throwable> v(10u);
-  REQUIRE_NOTHROW(v.Reserve(21u));  // NOLINT
+  REQUIRE_NOTHROW(v.Reserve(30u));  // NOLINT
+
+  const auto capacity = v.Capacity();
+  const auto size = v.Size();
+  const auto data = v.Data();
+  try {  // no memory management case
+    Throwable::until_throw = 30;
+    v.Reserve(100u);
+  } catch (Exception) {
+    REQUIRE(v.Capacity() == capacity);
+    REQUIRE(v.Size() == size);
+    REQUIRE(v.Data() == data);
+  }
 }
 
 TEST_CASE("ShrinkToFit Safety", "[Safety]") {
-  Throwable::until_throw = 50;
-  Vector<Throwable> v(10u);
-  v.Reserve(21u);
+  Throwable::until_throw = 95;
+  Vector<Throwable> v(20u);
+  v.Reserve(30u);
   REQUIRE_NOTHROW(v.ShrinkToFit());  // NOLINT
+
+  v.Resize(10);
+  const auto capacity = v.Capacity();
+  const auto size = v.Size();
+  const auto data = v.Data();
+  try {  // no memory management case
+    Throwable::until_throw = 5;
+    v.ShrinkToFit();
+  } catch (Exception) {
+    REQUIRE(v.Capacity() == capacity);
+    REQUIRE(v.Size() == size);
+    REQUIRE(v.Data() == data);
+  }
 }
 
 TEST_CASE("PushBack Safety", "[Safety]") {
@@ -1095,14 +1137,24 @@ TEST_CASE("PushBack Safety", "[Safety]") {
   v.Reserve(100u);
   const auto capacity = v.Capacity();
   const auto data = v.Data();
-  Throwable::until_throw = static_cast<int>(capacity) + 1;
+  Throwable::until_throw = static_cast<int>(capacity) + 2;
   for (size_t i = 0; i < capacity; ++i) {
     v.PushBack({});
   }
-  REQUIRE_THROWS_AS(v.PushBack({}), Exception);  // NOLINT
+  const Throwable object;
+  REQUIRE_THROWS_AS(v.PushBack(object), Exception);  // NOLINT
   REQUIRE(v.Size() == capacity);
   REQUIRE(v.Capacity() == capacity);
   REQUIRE(v.Data() == data);
+
+  try {  // no memory management case
+    Throwable::until_throw = static_cast<int>(2 * capacity) + 1;
+    v.PushBack(object);
+  } catch (...) {
+    REQUIRE(v.Size() == capacity);
+    REQUIRE(v.Capacity() == capacity);
+    REQUIRE(v.Data() == data);
+  }
 }
 
 #ifdef VECTOR_MEMORY_IMPLEMENTED

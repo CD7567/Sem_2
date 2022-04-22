@@ -1,6 +1,6 @@
 #pragma once
 
-#define VECTOR_MEMORY_IMPLEMENTED
+//  #define VECTOR_MEMORY_IMPLEMENTED
 
 #include <cstdint>
 #include <algorithm>
@@ -21,18 +21,19 @@ class Vector {
   template <bool IsConst>
   class RawIterator {
    public:
-    using value_type = Vector::ValueType;
-    using difference_type = Vector::DifferenceType;
-    using iterator_category = std::random_access_iterator_tag;
-    using pointer = typename std::conditional_t<IsConst, Vector::ConstPointer, Vector::Pointer>;
-    using reference = typename std::conditional_t<IsConst, Vector::ConstReference, Vector::Reference>;
+    using value_type = Vector::ValueType;                                                               //  NOLINT
+    using difference_type = Vector::DifferenceType;                                                     //  NOLINT
+    using iterator_category = std::random_access_iterator_tag;                                          //  NOLINT
+    using pointer = typename std::conditional_t<IsConst, Vector::ConstPointer, Vector::Pointer>;        //  NOLINT
+    using reference = typename std::conditional_t<IsConst, Vector::ConstReference, Vector::Reference>;  //  NOLINT
 
-    RawIterator() noexcept: ptr_(nullptr) {};
-    RawIterator(pointer ptr) noexcept: ptr_(ptr) {};  //  NOLINT
-    RawIterator(const RawIterator<IsConst>& src) noexcept: ptr_(src.ptr_) {};
+    RawIterator() noexcept : ptr_(nullptr){};
+    RawIterator(pointer ptr) noexcept : ptr_(ptr){};  //  NOLINT
+    RawIterator(const RawIterator<IsConst>& src) noexcept : ptr_(src.ptr_){};
 
     template <typename = typename std::enable_if<IsConst>>
-    explicit RawIterator(const RawIterator<false>& src) noexcept: ptr_(src.ptr_) {};
+    explicit RawIterator(const RawIterator<false>& src) noexcept : ptr_(src.ptr_) {
+    }
     RawIterator(RawIterator&& src) noexcept = default;
 
     ~RawIterator() noexcept = default;
@@ -64,7 +65,7 @@ class Vector {
       ++ptr_;
       return *this;
     };
-    friend RawIterator operator++(RawIterator& it, int) noexcept {
+    friend RawIterator operator++(RawIterator& it, int)noexcept {
       ++it;
       return {it.ptr_ - 1};
     };
@@ -73,7 +74,7 @@ class Vector {
       --ptr_;
       return *this;
     }
-    friend RawIterator operator--(RawIterator& it, int) noexcept {
+    friend RawIterator operator--(RawIterator& it, int)noexcept {
       --it;
       return {it.ptr_ + 1};
     }
@@ -133,7 +134,7 @@ class Vector {
   using ReverseIterator = std::reverse_iterator<Iterator>;
   using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
-  Vector() noexcept: buffer_(nullptr), size_(0), capacity_(0) {};
+  Vector() noexcept : buffer_(nullptr), size_(0), capacity_(0){};
 
   explicit Vector(SizeType size) : buffer_(nullptr), size_(0), capacity_(0) {
     if (size != 0) {
@@ -143,7 +144,7 @@ class Vector {
         buffer_ = allocator_.allocate(size);
 
         for (; constructed < size; ++constructed) {
-          new(buffer_ + constructed) ValueType();
+          new (buffer_ + constructed) ValueType();
         }
 
         size_ = size;
@@ -168,7 +169,7 @@ class Vector {
         buffer_ = allocator_.allocate(size);
 
         for (; constructed < size; ++constructed) {
-          new(buffer_ + constructed) ValueType(value);
+          new (buffer_ + constructed) ValueType(value);
         }
 
         size_ = size;
@@ -185,7 +186,9 @@ class Vector {
     }
   };
 
-  template <typename Iterator, typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag, typename std::iterator_traits<Iterator>::iterator_category>>>
+  template <typename Iterator,
+            typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag,
+                                                          typename std::iterator_traits<Iterator>::iterator_category>>>
   Vector(Iterator first, Iterator last) : buffer_(nullptr), size_(0), capacity_(0) {
     DifferenceType size = last - first;
 
@@ -197,7 +200,7 @@ class Vector {
         Pointer it_buffer = buffer_;
 
         for (auto it = first; it != last; ++it, ++it_buffer, ++constructed) {
-          new(it_buffer) ValueType(*it);
+          new (it_buffer) ValueType(*it);
         }
 
         size_ = size;
@@ -225,7 +228,7 @@ class Vector {
         Pointer it_buffer = buffer_;
 
         for (auto it = list.begin(); it != list.end(); ++it, ++it_buffer, ++constructed) {
-          new(it_buffer) ValueType(*it);
+          new (it_buffer) ValueType(*it);
         }
 
         size_ = size;
@@ -250,7 +253,7 @@ class Vector {
         buffer_ = allocator_.allocate(src.capacity_);
 
         for (SizeType i = 0; i < src.size_; ++i, ++constructed) {
-          new(buffer_ + i) ValueType(src.buffer_[i]);
+          new (buffer_ + i) ValueType(src.buffer_[i]);
         }
 
         size_ = src.size_;
@@ -267,7 +270,7 @@ class Vector {
     }
   }
 
-  Vector(Vector&& other) noexcept: buffer_(other.buffer_), size_(other.size_), capacity_(other.capacity_) {
+  Vector(Vector&& other) noexcept : buffer_(other.buffer_), size_(other.size_), capacity_(other.capacity_) {
     other.buffer_ = nullptr;
     other.size_ = 0;
     other.capacity_ = 0;
@@ -291,7 +294,7 @@ class Vector {
           temp = allocator_.allocate(src.capacity_);
 
           for (SizeType i = 0; i < src.size_; ++i, ++constructed) {
-            new(temp + i) ValueType(src.buffer_[i]);
+            new (temp + i) ValueType(src.buffer_[i]);
           }
 
           for (SizeType i = 0; i < size_; ++i) {
@@ -435,43 +438,43 @@ class Vector {
     return buffer_;
   }
 
-  Iterator begin() noexcept {
+  Iterator begin() noexcept {  //  NOLINT
     return Iterator(buffer_);
   }
-  ConstIterator begin() const noexcept {
+  ConstIterator begin() const noexcept {  //  NOLINT
     return ConstIterator(buffer_);
   }
-  ConstIterator cbegin() const noexcept {
+  ConstIterator cbegin() const noexcept {  //  NOLINT
     return ConstIterator(buffer_);
   }
 
-  Iterator end() noexcept {
+  Iterator end() noexcept {  //  NOLINT
     return Iterator(buffer_ + size_);
   }
-  ConstIterator end() const noexcept {
+  ConstIterator end() const noexcept {  //  NOLINT
     return ConstIterator(buffer_ + size_);
   }
-  ConstIterator cend() const noexcept {
+  ConstIterator cend() const noexcept {  //  NOLINT
     return ConstIterator(buffer_ + size_);
   }
 
-  ReverseIterator rbegin() noexcept {
+  ReverseIterator rbegin() noexcept {  //  NOLINT
     return std::make_reverse_iterator(Iterator{buffer_ + size_});
   }
-  ConstReverseIterator rbegin() const noexcept {
+  ConstReverseIterator rbegin() const noexcept {  //  NOLINT
     return std::make_reverse_iterator(ConstIterator{buffer_ + size_});
   }
-  ConstReverseIterator crbegin() const noexcept {
+  ConstReverseIterator crbegin() const noexcept {  //  NOLINT
     return std::make_reverse_iterator(ConstIterator{buffer_ + size_});
   }
 
-  ReverseIterator rend() noexcept {
+  ReverseIterator rend() noexcept {  //  NOLINT
     return std::make_reverse_iterator(Iterator{buffer_});
   }
-  ConstReverseIterator rend() const noexcept {
+  ConstReverseIterator rend() const noexcept {  //  NOLINT
     return std::make_reverse_iterator(ConstIterator{buffer_});
   }
-  ConstReverseIterator crend() const noexcept {
+  ConstReverseIterator crend() const noexcept {  //  NOLINT
     return std::make_reverse_iterator(ConstIterator{buffer_});
   }
 
@@ -488,11 +491,11 @@ class Vector {
         temp = allocator_.allocate(new_size);
 
         for (SizeType i = size_; i < new_size; ++i, ++constructed) {
-          new(temp + i) ValueType();
+          new (temp + i) ValueType();
         }
 
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(std::move(buffer_[i]));
+          new (temp + i) ValueType(std::move(buffer_[i]));
         }
 
         for (SizeType i = 0; i < size_; ++i) {
@@ -517,7 +520,7 @@ class Vector {
       }
 
       for (SizeType i = size_; i < new_size; ++i) {
-        new(buffer_ + i) ValueType();
+        new (buffer_ + i) ValueType();
       }
 
       size_ = new_size;
@@ -532,11 +535,11 @@ class Vector {
         temp = allocator_.allocate(new_size);
 
         for (SizeType i = size_; i < new_size; ++i, ++constructed) {
-          new(temp + i) ValueType(value);
+          new (temp + i) ValueType(value);
         }
 
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(std::move(buffer_[i]));
+          new (temp + i) ValueType(std::move(buffer_[i]));
         }
 
         for (SizeType i = 0; i < size_; ++i) {
@@ -560,7 +563,7 @@ class Vector {
 
       try {
         for (SizeType i = size_; i < new_size; ++i, ++constructed) {
-          new(buffer_ + i) ValueType(value);
+          new (buffer_ + i) ValueType(value);
         }
 
         for (SizeType i = new_size; i < size_; ++i) {
@@ -587,7 +590,7 @@ class Vector {
         temp = allocator_.allocate(new_cap);
 
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(std::move(buffer_[i]));
+          new (temp + i) ValueType(std::move(buffer_[i]));
         }
 
         for (SizeType i = 0; i < size_; ++i) {
@@ -618,7 +621,7 @@ class Vector {
           temp = allocator_.allocate(size_);
 
           for (SizeType i = 0; i < size_; ++i, ++constructed) {
-            new(temp + i) ValueType(std::move(buffer_[i]));
+            new (temp + i) ValueType(std::move(buffer_[i]));
           }
 
           for (SizeType i = 0; i < size_; ++i) {
@@ -663,8 +666,10 @@ class Vector {
         temp = allocator_.allocate(new_cap);
 
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(std::move(buffer_[i]));
+          new (temp + i) ValueType(std::move(buffer_[i]));
         }
+        ++constructed;
+        new (temp + size_) ValueType(value);
 
         for (SizeType i = 0; i < size_; ++i) {
           buffer_[i].~ValueType();
@@ -673,18 +678,28 @@ class Vector {
 
         buffer_ = temp;
         capacity_ = new_cap;
+        ++size_;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
+        for (SizeType i = 0; i < constructed && i < size_; ++i) {
           buffer_[i] = std::move(temp[i]);
           temp[i].~ValueType();
+        }
+
+        if (constructed == size_ + 1) {
+          temp[size_].~ValueType();
         }
 
         allocator_.deallocate(temp, new_cap);
         throw;
       }
+    } else {
+      try {
+        new (buffer_ + size_) ValueType(value);
+        ++size_;
+      } catch (...) {
+        buffer_[size_].~ValueType();
+      }
     }
-
-    new(buffer_ + size_++) ValueType(value);
   }
   void PushBack(ValueType&& value) {
     if (size_ == capacity_) {
@@ -696,7 +711,7 @@ class Vector {
         temp = allocator_.allocate(new_cap);
 
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(std::move(buffer_[i]));
+          new (temp + i) ValueType(std::move(buffer_[i]));
         }
 
         for (SizeType i = 0; i < size_; ++i) {
@@ -717,11 +732,11 @@ class Vector {
       }
     }
 
-    new(buffer_ + size_++) ValueType(std::move(value));
+    new (buffer_ + size_++) ValueType(std::move(value));
   }
 
   template <typename... Args>
-  void EmplaceBack(Args&& ... args) {
+  void EmplaceBack(Args&&... args) {
     if (size_ == capacity_) {
       SizeType new_cap = GetNewCapacity();
       SizeType constructed = 0;
@@ -731,7 +746,7 @@ class Vector {
         temp = allocator_.allocate(new_cap);
 
         for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new(temp + i) ValueType(std::move(buffer_[i]));
+          new (temp + i) ValueType(std::move(buffer_[i]));
         }
 
         for (SizeType i = 0; i < size_; ++i) {
@@ -752,7 +767,7 @@ class Vector {
       }
     }
 
-    new(buffer_ + size_++) ValueType(std::forward<Args>(args)...);
+    new (buffer_ + size_++) ValueType(std::forward<Args>(args)...);
   }
 
   ValueType PopBack() {
