@@ -570,40 +570,23 @@ class Vector {
       try {
         temp = allocator_.allocate(new_cap);
 
-        for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new (temp + i) ValueType(std::move(buffer_[i]));
-        }
-        ++constructed;
-        new (temp + size_) ValueType(value);
+        constructed += InitByMove(temp, size_, buffer_);
+        constructed += InitByCopy(temp + size_, 1, value);
 
-        for (SizeType i = 0; i < size_; ++i) {
-          buffer_[i].~ValueType();
-        }
+        Destroy(buffer_, size_);
         allocator_.deallocate(buffer_, capacity_);
 
         buffer_ = temp;
         capacity_ = new_cap;
         ++size_;
       } catch (...) {
-        for (SizeType i = 0; i < constructed && i < size_; ++i) {
-          buffer_[i] = std::move(temp[i]);
-          temp[i].~ValueType();
-        }
-
-        if (constructed == size_ + 1) {
-          temp[size_].~ValueType();
-        }
+        Destroy(temp, constructed);
 
         allocator_.deallocate(temp, new_cap);
         throw;
       }
     } else {
-      try {
-        new (buffer_ + size_) ValueType(value);
-        ++size_;
-      } catch (...) {
-        buffer_[size_].~ValueType();
-      }
+      size_ += InitByCopy(buffer_ + size_, 1, value);
     }
   }
   void PushBack(ValueType&& value) {
@@ -615,29 +598,24 @@ class Vector {
       try {
         temp = allocator_.allocate(new_cap);
 
-        for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new (temp + i) ValueType(std::move(buffer_[i]));
-        }
+        constructed += InitByMove(temp, size_, buffer_);
+        constructed += InitByMove(temp + size_, 1, value);
 
-        for (SizeType i = 0; i < size_; ++i) {
-          buffer_[i].~ValueType();
-        }
+        Destroy(buffer_, size_);
         allocator_.deallocate(buffer_, capacity_);
 
         buffer_ = temp;
         capacity_ = new_cap;
+        ++size_;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          buffer_[i] = std::move(temp[i]);
-          temp[i].~ValueType();
-        }
+        Destroy(temp, constructed);
 
         allocator_.deallocate(temp, new_cap);
         throw;
       }
+    } else {
+      size_ += InitByMove(buffer_ + size_, 1, value);
     }
-
-    new (buffer_ + size_++) ValueType(std::move(value));
   }
 
   template <typename... Args>
@@ -755,6 +733,7 @@ class Vector {
 
     return constructed;
   }
+
   inline SizeType InitByMove(Pointer raw_begin, SizeType n, Reference src) {
     SizeType constructed = 0;
 

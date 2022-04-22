@@ -3,7 +3,8 @@
 #include <vector>
 #include "contest_3/part_2/vector/vector.h"
 
-template <typename = >
+template <typename Arg>
+void f(Arg&&);
 
 void foo(int, int&);
 
