@@ -757,7 +757,7 @@ class Vector {
     return new_cap;
   }
 
-  inline void InitByDefault(Pointer raw_begin, SizeType n) {
+  inline SizeType InitByDefault(Pointer raw_begin, SizeType n) {
     SizeType constructed = 0;
 
     try {
@@ -765,14 +765,14 @@ class Vector {
         new (raw_begin + i) ValueType();
       }
     } catch (...) {
-      for (SizeType i = 0; i < constructed; ++i) {
-        raw_begin[i].~ValueType();
-      }
+      Destroy(raw_begin, constructed);
 
       throw;
     }
+
+    return constructed;
   }
-  inline void InitByCopy(Pointer raw_begin, SizeType n, ConstReference src) {
+  inline SizeType InitByCopy(Pointer raw_begin, SizeType n, ConstReference src) {
     SizeType constructed = 0;
 
     try {
@@ -780,18 +780,18 @@ class Vector {
         new (raw_begin + i) ValueType(src);
       }
     } catch (...) {
-      for (SizeType i = 0; i < constructed; ++i) {
-        raw_begin[i].~ValueType();
-      }
+      Destroy(raw_begin, constructed);
 
       throw;
     }
+
+    return constructed;
   }
 
   template <typename Iterator,
             typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag,
                                                           typename std::iterator_traits<Iterator>::iterator_category>>>
-  inline void InitByCopy(Pointer raw_begin, SizeType n, Iterator it_src) {
+  inline SizeType InitByCopy(Pointer raw_begin, SizeType n, Iterator it_src) {
     SizeType constructed = 0;
 
     try {
@@ -799,12 +799,12 @@ class Vector {
         new (raw_begin + i) ValueType(*it_src);
       }
     } catch (...) {
-      for (SizeType i = 0; i < constructed; ++i) {
-        raw_begin[i].~ValueType();
-      }
+      Destroy(raw_begin, constructed);
 
       throw;
     }
+
+    return constructed;
   }
 
   inline void Destroy(Pointer begin, SizeType n) {
