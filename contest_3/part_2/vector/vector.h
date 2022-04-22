@@ -237,19 +237,19 @@ class Vector {
       try {
         buffer_ = allocator_.allocate(src.capacity_);
 
+        InitByCopy(buffer_, src.size_, src.buffer_);
+        /*
         for (SizeType i = 0; i < src.size_; ++i, ++constructed) {
           new (buffer_ + i) ValueType(src.buffer_[i]);
         }
 
+         */
         size_ = src.size_;
         capacity_ = src.capacity_;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          buffer_[i].~ValueType();
-        }
-
         allocator_.deallocate(buffer_, src.capacity_);
         buffer_ = nullptr;
+
         throw;
       }
     }
