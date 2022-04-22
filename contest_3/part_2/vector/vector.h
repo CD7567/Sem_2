@@ -189,21 +189,15 @@ class Vector {
 
       try {
         buffer_ = allocator_.allocate(size);
-        Pointer it_buffer = buffer_;
 
-        for (auto it = first; it != last; ++it, ++it_buffer, ++constructed) {
-          new (it_buffer) ValueType(*it);
-        }
+        InitByCopy(buffer_, size, first);
 
         size_ = size;
         capacity_ = size;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          buffer_[i].~ValueType();
-        }
-
         allocator_.deallocate(buffer_, capacity_);
         buffer_ = nullptr;
+
         throw;
       }
     }
@@ -814,6 +808,25 @@ class Vector {
     try {
       for (SizeType i = 0; i < n; ++i, ++constructed) {
         new (raw_begin + i) ValueType(src);
+      }
+    } catch (...) {
+      for (SizeType i = 0; i < constructed; ++i) {
+        raw_begin[i].~ValueType();
+      }
+
+      throw;
+    }
+  }
+
+  template <typename Iterator,
+            typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag,
+                                                          typename std::iterator_traits<Iterator>::iterator_category>>>
+  inline void InitByCopy(Pointer raw_begin, SizeType n, Iterator it_src) {
+    SizeType constructed = 0;
+
+    try {
+      for (SizeType i = 0; i < n; ++i, ++constructed, ++it_src) {
+        new (raw_begin + i) ValueType(*it_src);
       }
     } catch (...) {
       for (SizeType i = 0; i < constructed; ++i) {
