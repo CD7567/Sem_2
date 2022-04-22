@@ -217,18 +217,11 @@ class Vector {
 
   Vector(const Vector& src) : buffer_(nullptr), size_(0), capacity_(0) {
     if (src.capacity_ != 0) {
-      SizeType constructed = 0;
-
       try {
         buffer_ = allocator_.allocate(src.capacity_);
 
         InitByCopy(buffer_, src.size_, src.buffer_);
-        /*
-        for (SizeType i = 0; i < src.size_; ++i, ++constructed) {
-          new (buffer_ + i) ValueType(src.buffer_[i]);
-        }
 
-         */
         size_ = src.size_;
         capacity_ = src.capacity_;
       } catch (...) {
@@ -529,7 +522,6 @@ class Vector {
   void ShrinkToFit() {
     if (size_ != capacity_) {
       if (size_ != 0) {
-        SizeType constructed = 0;
         Pointer temp = nullptr;
 
         try {
@@ -719,12 +711,13 @@ class Vector {
     return constructed;
   }
 
-  inline SizeType InitByMove(Pointer raw_begin, SizeType n, Reference src) {
+  template <typename V>
+  inline SizeType InitByMove(Pointer raw_begin, SizeType n, V&& src) {
     SizeType constructed = 0;
 
     try {
       for (SizeType i = 0; i < n; ++i, ++constructed) {
-        new (raw_begin + i) ValueType(std::move(src));
+        new (raw_begin + i) ValueType(std::forward<ValueType>(src));
       }
     } catch (...) {
       Destroy(raw_begin, constructed);
@@ -734,6 +727,7 @@ class Vector {
 
     return constructed;
   }
+
   inline SizeType InitByMove(Pointer raw_begin, SizeType n, Pointer src) {
     SizeType constructed = 0;
 
