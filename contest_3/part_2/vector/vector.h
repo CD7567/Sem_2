@@ -479,50 +479,29 @@ class Vector {
       try {
         temp = allocator_.allocate(new_size);
 
-        for (SizeType i = size_; i < new_size; ++i, ++constructed) {
-          new (temp + i) ValueType(value);
-        }
+        constructed += InitByCopy(temp + size_, new_size - size_, value);
+        constructed += InitByMove(temp, size_, buffer_);
 
-        for (SizeType i = 0; i < size_; ++i, ++constructed) {
-          new (temp + i) ValueType(std::move(buffer_[i]));
-        }
-
-        for (SizeType i = 0; i < size_; ++i) {
-          buffer_[i].~ValueType();
-        }
+        Destroy(buffer_, size_);
         allocator_.deallocate(buffer_, capacity_);
 
         buffer_ = temp;
         size_ = new_size;
         capacity_ = new_size;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          temp[size_ + i].~ValueType();
-        }
-
+        Destroy(temp + size_, constructed);
         allocator_.deallocate(temp, new_size);
+
         throw;
       }
     } else {
-      SizeType constructed = 0;
-
-      try {
-        for (SizeType i = size_; i < new_size; ++i, ++constructed) {
-          new (buffer_ + i) ValueType(value);
-        }
-
-        for (SizeType i = new_size; i < size_; ++i) {
-          buffer_[i].~ValueType();
-        }
-
-        size_ = new_size;
-      } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          buffer_[size_ + i].~ValueType();
-        }
-
-        throw;
+      if (new_size > size_) {
+        InitByCopy(buffer_ + size_, new_size - size_, value);
+      } else {
+        Destroy(buffer_ + new_size, size_ - new_size);
       }
+
+      size_ = new_size;
     }
   }
 
