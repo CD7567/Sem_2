@@ -141,12 +141,6 @@ class Vector {
       try {
         buffer_ = allocator_.allocate(size);
 
-        /*
-        for (; constructed < size; ++constructed) {
-          new (buffer_ + constructed) ValueType();
-        }
-         */
-
         InitByDefault(buffer_, size);
 
         size_ = size;
@@ -162,24 +156,23 @@ class Vector {
 
   Vector(SizeType size, ConstReference value) : buffer_(nullptr), size_(0), capacity_(0) {
     if (size != 0) {
-      SizeType constructed = 0;
-
       try {
         buffer_ = allocator_.allocate(size);
 
+        /*
         for (; constructed < size; ++constructed) {
           new (buffer_ + constructed) ValueType(value);
         }
+         */
+
+        InitByCopy(buffer_, size, value);
 
         size_ = size;
         capacity_ = size;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          buffer_[i].~ValueType();
-        }
-
         allocator_.deallocate(buffer_, size);
         buffer_ = nullptr;
+
         throw;
       }
     }
@@ -813,6 +806,27 @@ class Vector {
       }
 
       throw;
+    }
+  }
+  inline void InitByCopy(Pointer raw_begin, SizeType n, ConstReference src) {
+    SizeType constructed = 0;
+
+    try {
+      for (SizeType i = 0; i < n; ++i, ++constructed) {
+        new (raw_begin + i) ValueType(src);
+      }
+    } catch (...) {
+      for (SizeType i = 0; i < constructed; ++i) {
+        raw_begin[i].~ValueType();
+      }
+
+      throw;
+    }
+  }
+
+  inline void Destroy(Pointer begin, SizeType n) {
+    for (SizeType i = 0; i < n; ++i) {
+      begin[i].~ValueType();
     }
   }
 
