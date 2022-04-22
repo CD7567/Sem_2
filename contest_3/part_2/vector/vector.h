@@ -185,8 +185,6 @@ class Vector {
     DifferenceType size = last - first;
 
     if (size != 0) {
-      SizeType constructed = 0;
-
       try {
         buffer_ = allocator_.allocate(size);
 
@@ -211,21 +209,22 @@ class Vector {
 
       try {
         buffer_ = allocator_.allocate(size);
+        /*
         Pointer it_buffer = buffer_;
 
         for (auto it = list.begin(); it != list.end(); ++it, ++it_buffer, ++constructed) {
           new (it_buffer) ValueType(*it);
         }
+         */
+
+        InitByCopy(buffer_, size, list.begin());
 
         size_ = size;
         capacity_ = size;
       } catch (...) {
-        for (SizeType i = 0; i < constructed; ++i) {
-          buffer_[i].~ValueType();
-        }
-
         allocator_.deallocate(buffer_, capacity_);
         buffer_ = nullptr;
+
         throw;
       }
     }
