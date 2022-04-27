@@ -44,12 +44,12 @@ class UnorderedSet {
     auto& bucket = buckets_[id];
     return static_cast<size_t>(std::distance(bucket.end(), bucket.begin()));
   }
-  [[nodiscard]] size_t Bucket(const KeyT& elem) const {
-    return GetIdx(elem);
+  [[nodiscard]] size_t Bucket(KeyT elem) const {
+    return (buckets_.empty() ? 0 : hash_(elem) % buckets_.size());
   }
 
   [[nodiscard]] float LoadFactor() const {
-    return static_cast<float>(n_elements_) / static_cast<float>(buckets_.size());
+    return (buckets_.empty() ? 0 : static_cast<float>(n_elements_) / static_cast<float>(buckets_.size()));
   }
 
   [[nodiscard]] bool Empty() const {
@@ -61,13 +61,12 @@ class UnorderedSet {
     buckets_.clear();
   }
 
-  template <typename Arg>
-  void Insert(Arg&& elem) {
+  void Insert(const KeyT& elem) {
     if (buckets_.empty()) {
       buckets_.resize(1);
     }
 
-    auto position = GetPosition(elem);
+    auto& bucket = buckets_[Bucket(elem)];
     auto next_it = position.pre_iterator_;
     ++next_it;
 
@@ -81,11 +80,14 @@ class UnorderedSet {
     }
   }
 
-  template <typename Arg>
-  [[nodiscard]] bool Find(Arg&& elem) const {
+  [[nodiscard]] bool Find(const KeyT& elem) const {
     auto position = GetPosition(elem);
     return ++position.pre_iterator_ != position.bucket_.end();
   }
+  /*[[nodiscard]] bool Find(KeyT&& elem) const {
+    auto position = GetPosition(elem);
+    return ++position.pre_iterator_ != position.bucket_.end();
+  }*/
 
   void Erase(const KeyT& elem) {
     auto position = GetPosition(elem);
@@ -144,10 +146,7 @@ class UnorderedSet {
   }
 
  private:
-  inline size_t GetIdx(const KeyT& elem) const {
-    return hash_(elem) % buckets_.size();
-  }
-  inline Position<KeyT> GetPosition(const KeyT& elem) const {
+  /*inline Position<KeyT> GetPosition(const KeyT& elem) const {
     auto& bucket = buckets_[GetIdx((elem))];
     auto it = bucket.before_begin();
     auto next_it = it;
@@ -160,7 +159,7 @@ class UnorderedSet {
     }
 
     return {bucket, it};
-  }
+  }*/
 
   size_t n_elements_;
   static std::hash<KeyT> hash_;
