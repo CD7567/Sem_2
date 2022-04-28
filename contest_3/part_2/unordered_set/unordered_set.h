@@ -8,9 +8,9 @@
 #include <forward_list>
 #include <iterator>
 
-template <typename KeyT>
+template <typename KeyT, bool IsConst>
 struct Position {
-  const std::forward_list<KeyT>& bucket_;
+  std::conditional_t<IsConst, const std::forward_list<KeyT>&, std::forward_list<KeyT>&> bucket_;
   typename std::forward_list<KeyT>::const_iterator pre_iterator_;
 };
 
@@ -20,8 +20,8 @@ class UnorderedSet {
   UnorderedSet() : n_elements_(0) {};
   explicit UnorderedSet(size_t count) : n_elements_(0), buckets_({count}) {}
   template <typename Iterator,
-            typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag,
-                                        typename std::iterator_traits<Iterator>::iterator_category>>>
+          typename = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag,
+                  typename std::iterator_traits<Iterator>::iterator_category>>>
   UnorderedSet(Iterator first, Iterator last) : n_elements_(0) {
     for (auto it = first; it != last; ++it) {
       Insert(*it);
@@ -29,6 +29,8 @@ class UnorderedSet {
   }
   UnorderedSet(const UnorderedSet& src) = default;
   UnorderedSet(UnorderedSet&& src) noexcept = default;
+
+  ~UnorderedSet() = default;
 
   UnorderedSet& operator=(const UnorderedSet& src) = default;
   UnorderedSet& operator=(UnorderedSet&& src) noexcept = default;
@@ -44,7 +46,7 @@ class UnorderedSet {
     auto& bucket = buckets_[id];
     return static_cast<size_t>(std::distance(bucket.end(), bucket.begin()));
   }
-  [[nodiscard]] size_t Bucket(KeyT elem) const {
+  [[nodiscard]] size_t Bucket(const KeyT& elem) const {
     return (buckets_.empty() ? 0 : hash_(elem) % buckets_.size());
   }
 
@@ -66,12 +68,12 @@ class UnorderedSet {
       buckets_.resize(1);
     }
 
-    auto& bucket = buckets_[Bucket(elem)];
+    auto position = GetPosition(elem);
     auto next_it = position.pre_iterator_;
     ++next_it;
 
     if (next_it != position.bucket_.end()) {
-      position.bucket_.insert_after(position.bucket_.before_begin(), std::forward(elem));
+      position.bucket_.insert_after(position.bucket_.before_begin(), elem);
       ++n_elements_;
     }
 
@@ -84,10 +86,6 @@ class UnorderedSet {
     auto position = GetPosition(elem);
     return ++position.pre_iterator_ != position.bucket_.end();
   }
-  /*[[nodiscard]] bool Find(KeyT&& elem) const {
-    auto position = GetPosition(elem);
-    return ++position.pre_iterator_ != position.bucket_.end();
-  }*/
 
   void Erase(const KeyT& elem) {
     auto position = GetPosition(elem);
@@ -108,7 +106,7 @@ class UnorderedSet {
         auto next_it = ++buckets_[src_list_idx].before_begin();
 
         for (auto it = buckets_[src_list_idx].before_begin(); next_it != buckets_[src_list_idx].end();) {
-          auto idx = GetIdx(*next_it);
+          auto idx = Bucket(*next_it);
 
           if (idx != src_list_idx) {
             buckets_[idx].splice_after(buckets_[idx].before_begin(), buckets_[src_list_idx], it);
@@ -121,7 +119,8 @@ class UnorderedSet {
     }
   }
   void Rehash(size_t new_bucket_count) {
-    if (new_bucket_count != buckets_.size() && (static_cast<float>(n_elements_) / static_cast<float>(new_bucket_count)) <= 1.0f) {
+    if (new_bucket_count != buckets_.size() &&
+        (static_cast<float>(n_elements_) / static_cast<float>(new_bucket_count)) <= 1.0f) {
       if (new_bucket_count > buckets_.size()) {
         Reserve(new_bucket_count);
       } else {
@@ -146,6 +145,35 @@ class UnorderedSet {
   }
 
  private:
+  inline Position<KeyT, false> GetPosition(const KeyT& elem) {
+    auto& bucket = buckets_[Bucket(elem)];
+    auto it = bucket.before_begin();
+    auto next_it = it;
+    ++next_it;
+
+    for (; next_it != bucket.end(); ++it, ++next_it) {
+      if (*next_it == elem) {
+        break;
+      }
+    }
+
+    return {bucket, it};
+  }
+  inline Position<KeyT, true> GetPosition(const KeyT& elem) const {
+    auto& bucket = buckets_[Bucket(elem)];
+    auto it = bucket.before_begin();
+    auto next_it = it;
+    ++next_it;
+
+    for (; next_it != bucket.end(); ++it, ++next_it) {
+      if (*next_it == elem) {
+        break;
+      }
+    }
+
+    return {bucket, it};
+  }
+
   /*inline Position<KeyT> GetPosition(const KeyT& elem) const {
     auto& bucket = buckets_[GetIdx((elem))];
     auto it = bucket.before_begin();
@@ -162,7 +190,7 @@ class UnorderedSet {
   }*/
 
   size_t n_elements_;
-  static std::hash<KeyT> hash_;
+  static constexpr std::hash<KeyT> hash_{};
 
   std::vector<std::forward_list<KeyT>> buckets_;
 };

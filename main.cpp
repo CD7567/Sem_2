@@ -19,12 +19,15 @@ void foo(int, int&);
 typedef const int val;
 typedef const val cval;
 
-void type(cval c) {
-  std::cout << __PRETTY_FUNCTION__;
+static std::hash<std::basic_string<char>> hash1;
+
+void foo(const std::string& a) {
+  std::cout << hash1(a);
 }
 
 int main() {
   auto hash = std::hash<int>();
+  auto list = std::forward_list<int>();
 
   const int a = 1;
   const int& b = a;
@@ -40,6 +43,7 @@ int main() {
   g(c);
   g(1);
 
-  type(1);
-  //std::cout << __PRETTY_FUNCTION__ ;
+  const auto str = std::to_string(1);
+
+  foo(str);
 }
