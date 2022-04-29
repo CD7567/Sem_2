@@ -1,6 +1,6 @@
 #pragma once
 
-#define TEMPORARY_ENUMERATE_IMPLEMENTED
+//#define TEMPORARY_ENUMERATE_IMPLEMENTED
 
 #include <cstdint>
 #include <algorithm>
@@ -8,7 +8,7 @@
 template <typename Collection, typename CollIterator = std::conditional_t<std::is_const_v<Collection>, typename Collection::const_iterator, typename Collection::iterator>>
 class Enumerate {
  public:
-  using ItValueType = std::pair<size_t, std::conditional_t<std::is_const_v<Collection>, typename Collection::const_reference, typename Collection::reference>>;
+  using ItValueType = std::pair<size_t, typename CollIterator::reference>;
 
  private:
   class Iterator : public std::iterator<std::forward_iterator_tag, ItValueType, std::ptrdiff_t, ItValueType*, ItValueType&> {
