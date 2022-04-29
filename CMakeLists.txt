@@ -27,6 +27,7 @@ add_executable(TestsRunTokenize test/contest_2/test_tokenize.cpp)
 add_executable(TestsRunVector test/contest_3/test_vector.cpp)
 add_executable(TestsRunUnorderedSet test/contest_3/test_unordered_set.cpp)
 add_executable(TestsRunRange test/contest_3/test_range.cpp)
+add_executable(TestsRunEnumerate test/contest_3/test_enumerate.cpp)
 
 # ------------------------------------------------------------
 
@@ -105,3 +106,4 @@ target_include_directories(TestsRunTokenize PUBLIC contest_2/part_2/tokenize)
 target_include_directories(TestsRunVector PUBLIC contest_3/part_2/vector)
 target_include_directories(TestsRunUnorderedSet PUBLIC contest_3/part_2/unordered_set)
 target_include_directories(TestsRunRange PUBLIC contest_3/part_2/iter)
+target_include_directories(TestsRunEnumerate PUBLIC contest_3/part_2/iter)
