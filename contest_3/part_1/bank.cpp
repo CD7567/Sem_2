@@ -15,23 +15,22 @@ int main() {
   std::cin >> n;
 
   for (size_t i = 0; i < n; ++i) {
-    std::cin >> command_type;
+    std::cin >> command_type >> name;
+    auto account = accounts.find(name);
 
     if (command_type == 1) {
-      std::cin >> name >> sum;
+      std::cin >> sum;
 
-      if (!accounts.contains(name)) {
-        accounts.insert(std::make_pair(name, 0));
-      }
-
-      accounts[name] += sum;
-    } else {
-      std::cin >> name;
-
-      if (accounts.contains(name)) {
-        std::cout << accounts[name] << '\n';
+      if (account == accounts.end()) {
+        accounts.emplace(name, sum);
       } else {
+        account->second += sum;
+      }
+    } else {
+      if (account == accounts.end()) {
         std::cout << "ERROR" << '\n';
+      } else {
+        std::cout << account->second << '\n';
       }
     }
   }
