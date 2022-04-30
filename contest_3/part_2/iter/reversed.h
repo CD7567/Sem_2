@@ -1,6 +1,6 @@
 #pragma once
 
-#define TEMPORARY_ENUMERATE_IMPLEMENTED
+#define REVERSE_REVERSED_IMPLEMENTED
 
 #include <cstdint>
 #include <algorithm>
@@ -12,59 +12,10 @@ class Reversed {
   using reference = value_type&;  //  NOLINT
   using const_reference = const value_type&;  //  NOLINT
 
- private:
-  class Iterator : public std::iterator<std::forward_iterator_tag, value_type , std::ptrdiff_t, value_type*, reference> {
-   public:
-    Iterator() = delete;
-    Iterator(const CollIterator& it) : iterator_(it){};
-    Iterator(const Iterator&) = default;
-    Iterator(Iterator&&) noexcept = default;
-
-    ~Iterator() = default;
-
-    Iterator& operator=(const Iterator&) = default;
-    Iterator& operator=(Iterator&&)  noexcept = default;
-
-    Iterator& operator++() {
-      ++iterator_;
-      return *this;
-    }
-    Iterator operator++(int) {
-      auto last_iter = iterator_;
-      ++iterator_;
-
-      return {last_iter};
-    }
-
-    reference operator*() const {
-      return *iterator_;
-    }
-
-    friend bool operator==(const Iterator& lhs, const Iterator& rhs) noexcept {
-      return lhs.idx_ == rhs.idx_;
-    }
-    friend bool operator!=(const Iterator& lhs, const Iterator& rhs) noexcept {
-      return !(lhs == rhs);
-    }
-    friend bool operator<(const Iterator& lhs, const Iterator& rhs) noexcept {
-      return lhs.idx_ < rhs.idx_;
-    }
-    friend bool operator>(const Iterator& lhs, const Iterator& rhs) noexcept {
-      return rhs < lhs;
-    }
-    friend bool operator<=(const Iterator& lhs, const Iterator& rhs) noexcept {
-      return !(rhs < lhs);
-    }
-    friend bool operator>=(const Iterator& lhs, const Iterator& rhs) noexcept {
-      return !(lhs < rhs);
-    }
-
-   private:
-    CollIterator iterator_;
-  };
-
- public:
-  using iterator = Iterator;  //  NOLINT
+  using iterator = std::reverse_iterator<CollIterator>;  //  NOLINT
+  using const_iterator = std::reverse_iterator<typename Collection::const_iterator>;  //  NOLINT
+  using reversed_iterator = CollIterator;  //  NOLINT
+  using const_reversed_iterator = typename Collection::const_iterator;  //  NOLINT
 
   Reversed() = delete;
   explicit Reversed(Collection& coll) : temp_collection_(), begin_(coll.begin()), end_(coll.end()) {}
@@ -74,12 +25,20 @@ class Reversed {
 
   ~Reversed() = default;
 
-  Iterator begin() const {
-    return {end_};
+  iterator begin() const {
+    return std::make_reverse_iterator(end_);
   }
 
-  Iterator end() const {
-    return {end_};
+  iterator end() const {
+    return std::make_reverse_iterator(begin_);
+  }
+
+  reversed_iterator rbegin() const {
+    return begin_;
+  }
+
+  reversed_iterator rend() const {
+    return end_;
   }
 
  private:
