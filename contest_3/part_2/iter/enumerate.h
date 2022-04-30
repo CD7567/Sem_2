@@ -1,6 +1,6 @@
 #pragma once
 
-//#define TEMPORARY_ENUMERATE_IMPLEMENTED
+#define TEMPORARY_ENUMERATE_IMPLEMENTED
 
 #include <cstdint>
 #include <algorithm>
@@ -8,7 +8,7 @@
 template <typename Collection, typename CollIterator = std::conditional_t<std::is_const_v<Collection>, typename Collection::const_iterator, typename Collection::iterator>>
 class Enumerate {
  public:
-  using ItValueType = std::pair<size_t, typename CollIterator::reference>;
+  using ItValueType = std::pair<size_t, typename Collection::reference>;
 
  private:
   class Iterator : public std::iterator<std::forward_iterator_tag, ItValueType, std::ptrdiff_t, ItValueType*, ItValueType&> {
@@ -16,7 +16,7 @@ class Enumerate {
     Iterator() = delete;
     Iterator(const CollIterator& it, size_t idx) : idx_(idx), iterator_(it){};
     Iterator(const Iterator&) = default;
-    Iterator(Iterator&&)  noexcept = default;
+    Iterator(Iterator&&) noexcept = default;
 
     ~Iterator() = default;
 
@@ -73,20 +73,16 @@ class Enumerate {
   Enumerate() = delete;
   explicit Enumerate(Collection& coll) : temp_collection_(), begin_(coll.begin()), end_(coll.end()) {}
   explicit Enumerate(Collection&& coll) : temp_collection_(coll), begin_(temp_collection_.begin()), end_(temp_collection_.end()) {}
-  Enumerate(const Enumerate&) = delete;
+  Enumerate(Enumerate&) = delete;
   Enumerate(Enumerate&&) = delete;
 
   ~Enumerate() = default;
 
   Iterator begin() const {
-    //return {temp_collection_.begin(), 0};
     return {begin_, 0};
-    //std::cout << __PRETTY_FUNCTION__ << std::endl;
   }
 
   Iterator end() const {
-    //CollIterator&& it_begin = temp_collection_.begin();
-    //CollIterator&& it_end = temp_collection_.end();
     return {end_, static_cast<size_t>(std::distance(begin_, end_))};
   }
 
