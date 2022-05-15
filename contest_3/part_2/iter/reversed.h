@@ -32,23 +32,23 @@ class Reversed {
   ~Reversed() = default;
 
   iterator begin() const {  //  NOLINT
-    return std::make_reverse_iterator(end_);
+    return end_;
   }
 
   iterator end() const {  //  NOLINT
-    return std::make_reverse_iterator(begin_);
-  }
-
-  reversed_iterator rbegin() const {  //  NOLINT
     return begin_;
   }
 
+  reversed_iterator rbegin() const {  //  NOLINT
+    return begin_.base();
+  }
+
   reversed_iterator rend() const {  //  NOLINT
-    return end_;
+    return end_.base();
   }
 
  private:
   Collection temp_collection_;
-  CollIterator begin_;
-  CollIterator end_;
+  iterator begin_;
+  iterator end_;
 };
