@@ -29,7 +29,7 @@ class UnorderedSet {
     }
   }
   UnorderedSet(const UnorderedSet& src) = default;
-  UnorderedSet(UnorderedSet&& src) noexcept : buckets_(std::move(src.buckets_)), n_elements_(src.n_elements_) {
+  UnorderedSet(UnorderedSet&& src) noexcept : n_elements_(src.n_elements_), buckets_(std::move(src.buckets_)) {
     src.n_elements_ = 0;
   }
 
@@ -170,7 +170,6 @@ class UnorderedSet {
 
  private:
   inline Position<KeyT, false> GetPosition(const KeyT& elem) {
-    auto idx = Bucket(elem);
     auto& bucket = buckets_[Bucket(elem)];
     auto it = bucket.before_begin();
     auto next_it = it;
