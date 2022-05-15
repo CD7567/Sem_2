@@ -7664,7 +7664,7 @@ namespace {
         // Code accompanying the article "Approximating the erfinv function" in GPU Computing Gems, Volume 2
         double w, p;
 
-        w = -log((1.0 - x) * (1.0 + x));
+        w = -Log((1.0 - x) * (1.0 + x));
 
         if (w < 6.250000) {
             w = w - 3.125000;
@@ -10367,7 +10367,7 @@ namespace Catch {
 
 // end catch_debug_console.h
 #if defined(CATCH_CONFIG_ANDROID_LOGWRITE)
-#include <android/log.h>
+#include <android/Log.h>
 
     namespace Catch {
         void writeToDebugConsole( std::string const& text ) {
@@ -12244,7 +12244,7 @@ namespace {
     }
 
     void SimplePcg32::discard(uint64_t skip) {
-        // We could implement this to run in O(log n) steps, but this
+        // We could implement this to run in O(Log n) steps, but this
         // should suffice for our use case.
         for (uint64_t s = 0; s < skip; ++s) {
             static_cast<void>((*this)());
