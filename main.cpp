@@ -6,7 +6,6 @@ class SegmentTree {
  private:
   struct NodeValueType {
     int32_t value = INT32_MIN;
-    size_t amount = 1;
     int32_t promise = 0;
   };
 
@@ -20,17 +19,12 @@ class SegmentTree {
     }
 
     for (size_t i = leaves_shift - 1; i < leaves_shift; --i) {
-      tree_[i] = GetMax(tree_[GetLeftChildIdx(i)], tree_[GetRightChildIdx(i)]);
+      tree_[i].value = GetMax(GetLeftChildIdx(i), GetRightChildIdx(i));
     }
   }
 
-  NodeValueType Max(size_t begin, size_t end) {
-    auto max = NodeMax(begin, end, 0, 0, size_ / 2);
-
-    max.value += max.promise;
-    max.promise = 0;
-
-    return max;
+  int32_t Max(size_t begin, size_t end) {
+    return NodeMax(begin, end, 0, 0, size_ / 2);
   }
 
   void Update(size_t begin, size_t end, int32_t delta) {
@@ -47,20 +41,11 @@ class SegmentTree {
   static inline size_t GetRightChildIdx(size_t idx) {
     return 2 * idx + 2;
   }
-  static inline NodeValueType GetMax(const NodeValueType& lhs, const NodeValueType& rhs) {
-    NodeValueType result;
+  inline int32_t GetMax(size_t lhs, size_t rhs) {
+    auto& left_node = tree_[lhs];
+    auto& right_node = tree_[rhs];
 
-    if (lhs.value + lhs.promise > rhs.value + rhs.promise) {
-      result = lhs;
-    } else if (lhs.value + lhs.promise < rhs.value + rhs.promise) {
-      result = rhs;
-    } else {
-      result.value = lhs.value;
-      result.amount = lhs.amount + rhs.amount;
-      result.promise = lhs.promise;
-    }
-
-    return result;
+    return std::max(left_node.value + left_node.promise, right_node.value + right_node.promise);
   }
 
   static inline size_t Log(size_t num) {
@@ -74,27 +59,29 @@ class SegmentTree {
     return top - 1;
   }
 
-  NodeValueType NodeMax(size_t begin, size_t end, size_t node, size_t max_begin, size_t max_end) {
-    NodeValueType result;
+  void PushPromises(size_t node) {
+    auto& curr_node = tree_[node];
+
+    tree_[GetLeftChildIdx(node)].promise += curr_node.promise;
+    tree_[GetRightChildIdx(node)].promise += curr_node.promise;
+    curr_node.value += curr_node.promise;
+    curr_node.promise = 0;
+  }
+
+  int32_t NodeMax(size_t begin, size_t end, size_t node, size_t max_begin, size_t max_end) {
+    int32_t result;
 
     if (begin <= max_begin && end >= max_end) {
-      result = tree_[node];
+      result = tree_[node].value + tree_[node].promise;
     } else if (max_end < begin || max_begin > end) {
-      result = {INT32_MIN, 0};
+      result = INT32_MIN;
     } else {
-      size_t left_idx = GetLeftChildIdx(node);
-      size_t right_idx = GetRightChildIdx(node);
-      int32_t promise = tree_[node].promise;
-
-      tree_[left_idx].promise += promise;
-      tree_[right_idx].promise += promise;
-      tree_[node].value += promise;
-      tree_[node].promise = 0;
+      PushPromises(node);
 
       auto left_max = NodeMax(begin, end, GetLeftChildIdx(node), max_begin, (max_begin + max_end) / 2);
       auto right_max = NodeMax(begin, end, GetRightChildIdx(node), (max_begin + max_end) / 2 + 1, max_end);
 
-      result = GetMax(left_max, right_max);
+      result = std::max(left_max, right_max);
     }
 
     return result;
@@ -104,8 +91,15 @@ class SegmentTree {
     if (begin <= upd_begin && end >= upd_end) {
       tree_[node].promise += delta;
     } else if (begin <= upd_end && end >= upd_begin ) {
-      NodeUpdate(begin, end, GetLeftChildIdx(node), upd_begin, (upd_begin + upd_end) / 2, delta);
-      NodeUpdate(begin, end, GetRightChildIdx(node), (upd_begin + upd_end) / 2 + 1, upd_end, delta);
+      size_t left_child_idx = GetLeftChildIdx(node);
+      size_t right_child_idx = GetLeftChildIdx(node);
+
+      PushPromises(node);
+
+      NodeUpdate(begin, end, left_child_idx, upd_begin, (upd_begin + upd_end) / 2, delta);
+      NodeUpdate(begin, end, right_child_idx, (upd_begin + upd_end) / 2 + 1, upd_end, delta);
+
+      tree_[node].value = GetMax(left_child_idx, right_child_idx);
     }
   }
 };
@@ -137,8 +131,7 @@ int main() {
         break;
 
       case 'm':
-        auto max = tree.Max(begin - 1, end - 1);
-        std::cout << max.value << ' ';
+        std::cout << tree.Max(begin - 1, end - 1) << ' ';
         break;
     }
   }
