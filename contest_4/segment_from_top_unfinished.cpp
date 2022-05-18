@@ -25,19 +25,7 @@ class SegmentTree {
     }
 
     for (size_t i = leaves_shift - 1; i < leaves_shift; --i) {
-      std::pair<int32_t, size_t>& left_child = tree_[GetLeftChildIdx(i)];
-      std::pair<int32_t, size_t>& right_child = tree_[GetRightChildIdx(i)];
-
-      if (left_child.first > right_child.first) {
-        tree_[i].first = left_child.first;
-        tree_[i].second = left_child.second;
-      } else if (left_child.first < right_child.first) {
-        tree_[i].first = right_child.first;
-        tree_[i].second = right_child.second;
-      } else {
-        tree_[i].first = left_child.first;
-        tree_[i].second = left_child.second + right_child.second;
-      }
+      tree_[i] = GetMax(GetLeftChildIdx(i), GetRightChildIdx(i));
     }
   }
 
@@ -82,6 +70,22 @@ class SegmentTree {
   }
   static inline size_t GetRightChildIdx(size_t idx) {
     return 2 * idx + 2;
+  }
+  inline std::pair<int32_t, size_t> GetMax(size_t lhs, size_t rhs) {
+    auto& left = tree_[lhs];
+    auto& right = tree_[rhs];
+    std::pair<int32_t, size_t> result;
+
+    if (left.first > right.first) {
+      result = left;
+    } else if (left.first < right.first) {
+      result = right;
+    } else {
+      result.first = left.first;
+      result.second = left.second + right.second;
+    }
+
+    return result;
   }
 };
 
