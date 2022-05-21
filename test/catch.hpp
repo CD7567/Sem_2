@@ -5032,7 +5032,7 @@ namespace Catch {
 } // namespace Catch
 
 ///////////////////////////////////////////////////////////////////////////////
-#define OC_MAKE_UNIQUE_NAME( root, uniqueSuffix ) root##uniqueSuffix
+#define OC_MAKE_UNIQUE_NAME( root_, uniqueSuffix ) root_##uniqueSuffix
 #define OC_TEST_CASE2( name, desc, uniqueSuffix ) \
 +(NSString*) OC_MAKE_UNIQUE_NAME( Catch_Name_test_, uniqueSuffix ) \
 { \
@@ -12668,7 +12668,7 @@ namespace Catch {
                         parent = &( parent->parent() );
                     }
                     assert( parent &&
-                            "Missing root (test case) level section" );
+                            "Missing root_ (test case) level section" );
 
                     auto const& parentSection =
                         static_cast<SectionTracker&>( *parent );
@@ -14367,7 +14367,7 @@ namespace TestCaseTracking {
     ITracker::~ITracker() = default;
 
     ITracker& TrackerContext::startRun() {
-        m_rootTracker = std::make_shared<SectionTracker>( NameAndLocation( "{root}", CATCH_INTERNAL_LINEINFO ), *this, nullptr );
+        m_rootTracker = std::make_shared<SectionTracker>( NameAndLocation( "{root_}", CATCH_INTERNAL_LINEINFO ), *this, nullptr );
         m_currentTracker = nullptr;
         m_runState = Executing;
         return *m_rootTracker;
@@ -14432,7 +14432,7 @@ namespace TestCaseTracking {
             : nullptr;
     }
     ITracker& TrackerBase::parent() {
-        assert( m_parent ); // Should always be non-null except for root
+        assert( m_parent ); // Should always be non-null except for root_
         return *m_parent;
     }
 
@@ -16981,7 +16981,7 @@ namespace Catch {
             XmlWriter::ScopedElement e = xml.scopedElement( "testcase" );
             if( className.empty() ) {
                 xml.writeAttribute( "classname", name );
-                xml.writeAttribute( "name", "root" );
+                xml.writeAttribute( "name", "root_" );
             }
             else {
                 xml.writeAttribute( "classname", className );
