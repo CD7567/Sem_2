@@ -98,7 +98,7 @@ class CartesianTree {
  private:
   NodePtr root_;
 
-  static size_t TreeSize(NodePtr node) {
+  static size_t TreeSum(NodePtr node) {
     return (node == nullptr ? 0 : node->tree_size_);
   }
   static void FixNode(NodePtr node) {
