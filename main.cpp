@@ -1,266 +1,119 @@
 #include <iostream>
 #include <vector>
-#include <random>
-#include <cstdint>
 
 struct Node {
-  int64_t value_ = INT64_MIN;
-  int64_t priority_ = rand();
-  int64_t tree_sum_ = 0;
+  int64_t value_;
+  int64_t priority_;
+  int64_t size_;
 
-  Node* parent_ = nullptr;
   Node* left_child_ = nullptr;
   Node* right_child_ = nullptr;
+  Node* parent_ = nullptr;
+
+  explicit Node(int64_t k) : value_(k), priority_(rand()), size_(1), left_child_(nullptr), right_child_(nullptr), parent_(nullptr){};
+
+  void HelpInorder() const {
+    if (left_child_ != nullptr) {
+      left_child_->HelpInorder();
+    }
+    std::cout << value_ << ' ';
+    if (right_child_ != nullptr) {
+      right_child_->HelpInorder();
+    }
+  }
 };
 
 class CartesianTree {
  public:
   using NodePtr = Node*;
 
-  CartesianTree() : root_(nullptr) {
-  }
-  explicit CartesianTree(const std::vector<std::pair<int32_t, int32_t>>& src) : root_(nullptr) {
-    NodePtr last_inserted = nullptr;
-    NodePtr curr = nullptr;
-
-    for (auto& vertex : src) {
-      auto new_node = new Node{vertex.first, vertex.second};
-      curr = last_inserted;
-
-      while (curr != nullptr && vertex.second < curr->priority_) {
-        curr = curr->parent_;
-      }
-
-      if (curr == nullptr) {
-        new_node->left_child_ = root_;
-
-        if (root_ != nullptr) {
-          root_->parent_ = new_node;
-        }
-
-        root_ = new_node;
-      } else {
-        new_node->left_child_ = curr->right_child_;
-
-        if (curr->right_child_ != nullptr) {
-          curr->right_child_->parent_ = new_node;
-        }
-
-        curr->right_child_ = new_node;
-        new_node->parent_ = curr;
-      }
-
-      last_inserted = new_node;
-    }
-  }
+  CartesianTree() : root_(nullptr){};
 
   ~CartesianTree() {
     Delete(root_);
   }
 
-  NodePtr Find(int64_t value) {
-    return Find(root_, value);
+  void Insert(int64_t k) {
+    root_ = Merge(root_, new Node(k));
   }
 
-  NodePtr Next(int64_t value) {
-    return Next(root_, value);
-  }
-  NodePtr Prev(int64_t value) {
-    return Prev(root_, value);
-  }
-  NodePtr Kth(size_t k) {
-    return Kth(root_, k);
-  }
+  void Rotate(int64_t left, int64_t right) {
+    auto split_1 = Split(root_, right);
+    auto split_2 = Split(split_1.first, left - 1);
 
-  void Insert(int64_t value) {
-    if (!Exists(value)) {
-      auto split = Split(root_, value);
+    root_ = Merge(split_2.first, split_1.second);
 
-      root_ = Merge(Merge(split.first, new Node{value}), split.second);
-    }
-  }
-  void Delete(int64_t value) {
-    if (Exists(value)) {
-      auto split = Split(root_, value);
-      auto split_second = Split(split.second, value + 1);
+    auto split_3 = Split(root_, 0);
 
-      root_ = Merge(split.first, split_second.second);
-
-      delete split_second.first;
-    }
+    root_ = Merge(split_3.first, Merge(split_2.second, split_3.second));
   }
 
-  bool Exists(int64_t value) {
-    return Find(value) != nullptr;
-  }
-
-  int64_t Sum(int64_t left_bound, int64_t right_bound) {
-    int64_t result;
-
-    auto split_1 = Split(root_, left_bound);
-    auto less_l_subtree = split_1.first;
-    auto geq_l_subtree = split_1.second;
-
-    auto split_2 = Split(geq_l_subtree, right_bound + 1);
-    auto less_r_subtree = split_2.first;
-    auto geq_r_subtree = split_2.second;
-
-    result = TreeSum(less_r_subtree);
-    root_ = Merge(Merge(less_l_subtree, less_r_subtree), geq_r_subtree);
-
-    return result;
+  void Inorder() const {
+    root_->HelpInorder();
   }
 
  private:
-  NodePtr root_;
+  Node* root_;
 
-  static int64_t TreeSum(NodePtr node) {
-    return (node == nullptr ? 0 : node->tree_sum_);
+  static int64_t Size(NodePtr node) {
+    return (node != nullptr ? node->size_ : 0);
   }
+
   static void FixNode(NodePtr node) {
-    if (node != nullptr) {
-      node->tree_sum_ = TreeSum(node->left_child_) + TreeSum(node->right_child_) + node->value_;
-    }
+    node->size_ = (node != nullptr ? 1 + Size(node->left_child_) + Size(node->right_child_) : node->size_);
   }
 
-  static NodePtr Merge(NodePtr lhs_root, NodePtr rhs_root) {
-    NodePtr result;
-
-    if (lhs_root == nullptr) {
-      result = rhs_root;
-    } else if (rhs_root == nullptr) {
-      result = lhs_root;
-    } else {
-      if (lhs_root->priority_ < rhs_root->priority_) {
-        result = lhs_root;
-        result->right_child_ = Merge(result->right_child_, rhs_root);
-
-        if (result->right_child_ != nullptr) {
-          result->right_child_->parent_ = result;
-        }
-      } else {
-        result = rhs_root;
-        result->left_child_ = Merge(lhs_root, result->left_child_);
-
-        if (result->left_child_ != nullptr) {
-          result->left_child_->parent_ = result;
-        }
-      }
+  NodePtr Merge(NodePtr tree_1, Node* tree_2) {
+    if (tree_1 == nullptr) {
+      return tree_2;
     }
 
-    FixNode(result);
-
-    return result;
-  }
-  static std::pair<NodePtr, NodePtr> Split(NodePtr root, int64_t value) {
-    std::pair<NodePtr, NodePtr> result;
-
-    if (root == nullptr) {
-      result = {nullptr, nullptr};
-    } else {
-      if (root->value_ < value) {
-        auto split = Split(root->right_child_, value);
-
-        root->right_child_ = split.first;
-
-        if (split.first != nullptr) {
-          split.first->parent_ = root;
-        }
-
-        if (split.second != nullptr) {
-          split.second->parent_ = nullptr;
-        }
-
-        result = {root, split.second};
-      } else {
-        auto split = Split(root->left_child_, value);
-
-        root->left_child_ = split.second;
-
-        if (split.first != nullptr) {
-          split.first->parent_ = nullptr;
-        }
-
-        if (split.second != nullptr) {
-          split.second->parent_ = root;
-        }
-
-        result = {split.first, root};
-      }
+    if (tree_2 == nullptr) {
+      return tree_1;
     }
 
-    FixNode(result.first);
-    FixNode(result.second);
+    if (tree_1->priority_ > tree_2->priority_) {
+      tree_1->right_child_ = Merge(tree_1->right_child_, tree_2);
+      tree_1->right_child_->parent_ = tree_1;
+      FixNode(tree_1);
+      return tree_1;
+    }
 
-    return result;
+    tree_2->left_child_ = Merge(tree_1, tree_2->left_child_);
+    tree_2->left_child_->parent_ = tree_2;
+    FixNode(tree_2);
+    return tree_2;
   }
 
-  static NodePtr Find(NodePtr root, int64_t value) {
-    NodePtr result = nullptr;
-
-    if (root != nullptr) {
-      if (root->value_ == value) {
-        result = root;
-      } else if (root->value_ < value) {
-        result = Find(root->right_child_, value);
-      } else {
-        result = Find(root->left_child_, value);
-      }
+  std::pair<NodePtr, NodePtr> Split(NodePtr tree, int64_t x) {
+    if (tree == nullptr) {
+      return {nullptr, nullptr};
     }
 
-    return result;
-  }
-  static NodePtr Next(NodePtr root, int64_t value) {
-    NodePtr result = nullptr;
+    std::pair<NodePtr, NodePtr> pair;
 
-    if (root != nullptr) {
-      if (root->value_ > value) {
-        result = Next(root->left_child_, value);
-
-        if (result == nullptr) {
-          result = root;
-        }
-      } else if (root->value_ < value) {
-        result = Next(root->right_child_, value);
+    if (Size(tree->left_child_) < x) {
+      pair = Split(tree->right_child_, x - Size(tree->left_child_) - 1);
+      tree->right_child_ = pair.first;
+      if (pair.first != nullptr) {
+        pair.first->parent_ = tree;
       }
-    }
-
-    return result;
-  }
-  static NodePtr Prev(NodePtr root, int64_t value) {
-    NodePtr result = nullptr;
-
-    if (root != nullptr) {
-      if (root->value_ < value) {
-        result = Prev(root->right_child_, value);
-
-        if (result == nullptr) {
-          result = root;
-        }
-      } else if (root->value_ > value) {
-        result = Prev(root->left_child_, value);
+      if (pair.second != nullptr) {
+        pair.second->parent_ = nullptr;
       }
+      FixNode(tree);
+      return std::make_pair(tree, pair.second);
     }
-
-    return result;
-  }
-  static NodePtr Kth(NodePtr root, size_t k) {
-    NodePtr result = root;
-
-    while (result != nullptr) {
-      size_t left_tree_size = TreeSum(result->left_child_);
-
-      if (left_tree_size < k) {
-        k -= left_tree_size + 1;
-        result = result->right_child_;
-      } else if (left_tree_size > k) {
-        result = result->left_child_;
-      } else {
-        break;
-      }
+    pair = Split(tree->left_child_, x);
+    tree->left_child_ = pair.second;
+    if (pair.second != nullptr) {
+      pair.second->parent_ = tree;
     }
-
-    return result;
+    if (pair.first != nullptr) {
+      pair.first->parent_ = nullptr;
+    }
+    FixNode(tree);
+    return std::make_pair(pair.first, tree);
   }
 
   static void Delete(NodePtr node) {
@@ -274,23 +127,19 @@ class CartesianTree {
 };
 
 int main() {
-  size_t comm_amount;
-  std::cin >> comm_amount;
-  auto tree = CartesianTree();
+  int64_t elem_amount, comm_amount, left_bound, right_bound;
+  CartesianTree my_tree;
 
-  int64_t value;
-  int64_t left_bound, right_bound;
-  char command;
+  std::cin >> elem_amount >> comm_amount;
 
-  for (size_t i = 0; i < comm_amount; ++i) {
-    std::cin >> command;
-
-    if (command == '+') {
-      std::cin >> value;
-      tree.Insert(value);
-    } else if (command == '?') {
-      std::cin >> left_bound >> right_bound;
-      std::cout << tree.Sum(left_bound, right_bound) << std::endl;
-    }
+  for (int64_t i = 1; i <= elem_amount; i++) {
+    my_tree.Insert(i);
   }
+
+  for (int64_t i = 0; i < comm_amount; i++) {
+    std::cin >> left_bound >> right_bound;
+    my_tree.Rotate(left_bound, right_bound);
+  }
+
+  my_tree.Inorder();
 }
