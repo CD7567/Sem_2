@@ -4,8 +4,8 @@
 #include <cstdint>
 
 struct Node {
-  int32_t value_ = INT32_MIN;
-  int32_t priority_ = rand();
+  int64_t value_ = INT32_MIN;
+  int64_t priority_ = rand();
   size_t tree_size_ = 0;
 
   Node* parent_ = nullptr;
@@ -56,31 +56,31 @@ class CartesianTree {
   }
 
   ~CartesianTree() {
-    ReversedTour(root_, [](NodePtr node) { delete node; });
+    Delete(root_);
   }
 
-  NodePtr Find(int32_t value) {
+  NodePtr Find(int64_t value) {
     return Find(root_, value);
   }
 
-  NodePtr Next(int32_t value) {
+  NodePtr Next(int64_t value) {
     return Next(root_, value);
   }
-  NodePtr Prev(int32_t value) {
+  NodePtr Prev(int64_t value) {
     return Prev(root_, value);
   }
   NodePtr Kth(size_t k) {
     return Kth(root_, k);
   }
 
-  void Insert(int32_t value) {
+  void Insert(int64_t value) {
     if (!Exists(value)) {
       auto split = Split(root_, value);
 
       root_ = Merge(Merge(split.first, new Node{value}), split.second);
     }
   }
-  void Delete(int32_t value) {
+  void Delete(int64_t value) {
     if (Exists(value)) {
       auto split = Split(root_, value);
       auto split_second = Split(split.second, value + 1);
@@ -91,24 +91,12 @@ class CartesianTree {
     }
   }
 
-  bool Exists(int32_t value) {
+  bool Exists(int64_t value) {
     return Find(value) != nullptr;
   }
 
  private:
   NodePtr root_;
-
-  static void ReversedTour(NodePtr node, void (*fun)(NodePtr)) {
-    if (node->left_child_ != nullptr) {
-      ReversedTour(node->left_child_, fun);
-    }
-
-    if (node->right_child_ != nullptr) {
-      ReversedTour(node->right_child_, fun);
-    }
-
-    fun(node);
-  }
 
   static size_t TreeSize(NodePtr node) {
     return (node == nullptr ? 0 : node->tree_size_);
@@ -136,7 +124,7 @@ class CartesianTree {
         }
       } else {
         result = rhs_root;
-        result->left_child_ = Merge(result->left_child_, lhs_root);
+        result->left_child_ = Merge(lhs_root, result->left_child_);
 
         if (result->left_child_ != nullptr) {
           result->left_child_->parent_ = result;
@@ -191,7 +179,7 @@ class CartesianTree {
     return result;
   }
 
-  static NodePtr Find(NodePtr root, int32_t value) {
+  static NodePtr Find(NodePtr root, int64_t value) {
     NodePtr result = nullptr;
 
     if (root != nullptr) {
@@ -206,24 +194,24 @@ class CartesianTree {
 
     return result;
   }
-  static NodePtr Next(NodePtr root, int32_t value) {
+  static NodePtr Next(NodePtr root, int64_t value) {
     NodePtr result = nullptr;
 
     if (root != nullptr) {
       if (root->value_ > value) {
-        result = Next(root->right_child_, value);
+        result = Next(root->left_child_, value);
 
         if (result == nullptr) {
           result = root;
         }
       } else if (root->value_ < value) {
-        result = Next(root->left_child_, value);
+        result = Next(root->right_child_, value);
       }
     }
 
     return result;
   }
-  static NodePtr Prev(NodePtr root, int32_t value) {
+  static NodePtr Prev(NodePtr root, int64_t value) {
     NodePtr result = nullptr;
 
     if (root != nullptr) {
@@ -257,6 +245,15 @@ class CartesianTree {
     }
 
     return result;
+  }
+
+  static void Delete(NodePtr node) {
+    if (node != nullptr) {
+      Delete(node->left_child_);
+      Delete(node->right_child_);
+    }
+
+    delete node;
   }
 };
 
