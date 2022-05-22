@@ -2,15 +2,13 @@
 #include <vector>
 
 struct Node {
-  int64_t value_;
-  int64_t priority_;
-  int64_t size_;
+  int64_t value_ = INT64_MIN;
+  int64_t priority_ = rand();
+  int64_t size_ = 1;
 
   Node* left_child_ = nullptr;
   Node* right_child_ = nullptr;
   Node* parent_ = nullptr;
-
-  explicit Node(int64_t k) : value_(k), priority_(rand()), size_(1), left_child_(nullptr), right_child_(nullptr), parent_(nullptr){};
 
   void HelpInorder() const {
     if (left_child_ != nullptr) {
@@ -34,7 +32,7 @@ class CartesianTree {
   }
 
   void Insert(int64_t k) {
-    root_ = Merge(root_, new Node(k));
+    root_ = Merge(root_, new Node{k});
   }
   void Rotate(int64_t left, int64_t right) {
     auto split_1 = Split(root_, right);
